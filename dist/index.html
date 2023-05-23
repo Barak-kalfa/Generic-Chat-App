@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./sidebar-styles.css">
+    <link rel="stylesheet" href="tree-styles.css" />
+    <script src="../src/firebase-config.js" type="module" defer></script>
+    <script src="../src/auth.js" type="module" defer></script>
+    <script src="../src/app.js" type="module" defer></script>
+    <title>Brain Storm</title>
+  </head>
+  <body>
+    <div id="header"></div>
+    <div id="backdrop" class=""></div>
+    <div id="modal" class="">
+      <h1>Sign Up</h1>
+      <label for="email">Enter Email</label>
+      <input type="email" name="email" id="email-input" />
+      <label for="password">Enter Password</label>
+      <input type="password" name="password" id="password-input" />
+      <button id="modal-button">Login</button>
+      <p>Already Sign Up? <a>Log In</a></p>
+    </div>
+    <div id="page" class="">
+       <div id="menu-box" class="">
+        <!-- <ul id="menu-list"></ul> -->
+        <div id="mySidebar" class="sidebar">
+          <a href="#">About</a>
+          <a href="#">Services</a>
+          <a href="#">Clients</a>
+          <a href="#">Contact</a>
+        </div>
+      </div> 
+      <div id="chat-box" class="">
+        <div id="members-box"><ul id="members-list"></ul></div>
+        <div id="storm-box">
+          <div class="tree">
+            <ul>
+              <li><a href="#" ><img src="https://mdbcdn.b-cdn.net/img/new/avatars/1.webp" alt=""><span>Child</span></a>
+                <ul>
+                  <li><a href="#" ><img src="https://mdbcdn.b-cdn.net/img/new/avatars/2.webp" alt=""><span>Grand Child</span></a>
+                  <ul>
+                    <li><a href="#" ><img src="https://mdbcdn.b-cdn.net/img/new/avatars/3.webp" alt=""><span>Grand Grand Child</span></a></li>
+                    <li><a href="#" ><img src="https://mdbcdn.b-cdn.net/img/new/avatars/4.webp" alt=""><span>Grand Grand Child</span></a></li>
+                  <li><a href="#" ><img src="https://mdbcdn.b-cdn.net/img/new/avatars/5.webp" alt=""><span>Grand Grand Child</span></a></li>
+                  </ul>
+                  </li>
+                  <li><a href="#" ><img src="https://mdbcdn.b-cdn.net/img/new/avatars/6.webp" alt=""><span>Grand Child</span></a></li>
+                  <li><a href="#" ><img src="https://mdbcdn.b-cdn.net/img/new/avatars/7.webp" alt=""><span>Grand Child</span></a>
+                    <ul>
+                      <li><a href="#" ><img src="https://mdbcdn.b-cdn.net/img/new/avatars/8.webp" alt=""><span>Grand Grand Child</span></a></li>
+                      <li><a href="#" ><img src="https://mdbcdn.b-cdn.net/img/new/avatars/9.webp" alt=""><span>Grand Grand Child</span></a></li>
+                    <li><a href="#" ><img src="https://mdbcdn.b-cdn.net/img/new/avatars/10.webp" alt=""><span>Grand Grand Child</span></a></li>
+                    </ul></li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div id="input-box">
+          <input id="message-input" type="text" name="message-input" />
+          <button id="message-button">Send</button>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
