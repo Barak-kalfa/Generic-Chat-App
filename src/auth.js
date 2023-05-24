@@ -2,17 +2,21 @@ import {
   onAuthStateChanged,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signOut,
+  signInWithPopup,
 } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
-import { auth } from "./firebase-config.js";
+import { auth, googleProvider } from "./firebase-config.js";
 
 const backdrop = document.getElementById("backdrop");
 const modal = document.getElementById("modal");
 const emailInput = document.getElementById("email-input");
 const passwordInput = document.getElementById("password-input");
 const modalButton = document.getElementById("modal-button");
-const currentUser = localStorage.getItem("uid") || null;
+export let currentUser = localStorage.getItem("uid") || null;
 const formType = document.querySelector("h1");
 const changeFormLink = document.querySelector("a");
+const googleButton = document.querySelector("#google-button");
+const logOutButton = document.querySelector("#log-out-button");
 
 const handleModalClick = async () => {
   try {
@@ -24,8 +28,8 @@ const handleModalClick = async () => {
         email,
         password
       );
-      const user = userCredentials.user;
-      localStorage.setItem("uid", user.uid);
+      currentUser = userCredentials.user;
+      localStorage.setItem("uid", currentUser.uid);
       toggleModal();
     } else if (formType.innerText === "Log In") {
       const userCredentials = await signInWithEmailAndPassword(
@@ -33,8 +37,8 @@ const handleModalClick = async () => {
         email,
         password
       );
-      const user = userCredentials.user;
-      localStorage.setItem("uid", user.uid);
+      currentUser = userCredentials.user;
+      localStorage.setItem("uid", currentUser.uid);
       toggleModal();
     }
   } catch (err) {
@@ -42,6 +46,29 @@ const handleModalClick = async () => {
   }
 };
 
+async function signInWithGoogle() {
+  try {
+    const userCredentials = await signInWithPopup(auth, googleProvider);
+    currentUser = userCredentials.user;
+    localStorage.setItem("uid", currentUser.uid);
+    toggleModal();
+  } catch (err) {
+    console.log(err.code, err.message);
+  }
+}
+
+async function logOut() {
+  try {
+    await signOut(auth);
+    localStorage.removeItem("uid");
+    toggleModal();
+  } catch (err) {
+    console.log(err.code, err.message);
+  }
+}
+
+logOutButton.addEventListener("click", logOut);
+googleButton.addEventListener("click", signInWithGoogle);
 modalButton.addEventListener("click", handleModalClick);
 
 const toggleModal = () => {
@@ -51,7 +78,8 @@ const toggleModal = () => {
 
 const handleChangeForm = () => {
   formType.innerText = formType.innerText === "Sign Up" ? "Log In" : "Sign Up";
-  changeFormLink.innerText = changeFormLink.innerText === "Sign Up" ? "Log In" : "Sign Up";
+  changeFormLink.innerText =
+    changeFormLink.innerText === "Sign Up" ? "Log In" : "Sign Up";
 };
 
 changeFormLink.addEventListener("click", handleChangeForm);

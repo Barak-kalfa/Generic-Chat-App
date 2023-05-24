@@ -1,25 +1,92 @@
-const menuBox = document.querySelector('#menu-box');
-const menuList = document.querySelector("#menu-list");
-const membersList = document.querySelector("#members-list");
+// import { messages } from "./mock/mock.js";
+import { db } from "./firebase-config.js";
+import {
+  getDocs,
+  collection,
+  doc,
+  setDoc,
+  query,
+  where,
+} from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
-const members = [1,2,3,4,5,6,7]
-const brainStorms = ["A", "B", "C", "D", "E", "F"];
+const sendMsgButton = document.querySelector(".send-icon");
+const messageInput = document.querySelector("#msg-input");
+const currentUser = {
+  name: "Barak Kalfa",
+  img: "https://mdbcdn.b-cdn.net/img/new/avatars/2.webp",
+};
+const msgPage = document.querySelector(".msg-page");
 
-for (const item of brainStorms) {
-  const listItem = document.createElement("li");
-  listItem.innerHTML = `<p>${item}</p>`;
-  menuList.appendChild(listItem);
+const USER_UID = "Stvgx7ExJ299YBHNdsV9";
+
+function sendMsg() {
+  const msg = document.createElement("div");
+  msg.className = "outgoing-chats";
+  msg.innerHTML = `<div class="outgoing-chats-img">
+  <img src=${currentUser.img} />
+  </div>
+  <div class="outgoing-msg">
+  <div class="outgoing-chats-msg">
+  <p class="multi-msg">
+  ${messageInput.value}
+  </p>
+  <span class="time">${new Date().toDateString()}</span>
+  </div>
+  </div>`;
+  msgPage.appendChild(msg);
+  msg.scrollIntoView();
 }
 
-for (const member of members) {
-  const listItem = document.createElement("li");
-  listItem.innerHTML = `<img src="https://mdbcdn.b-cdn.net/img/new/avatars/${1}.webp" alt="" >`
-  membersList.appendChild(listItem);
+async function getChats() {
+  const chatsRef = collection(db, "chat");
+  const q = query(chatsRef, where("users", "array-contains", "Stvgx7ExJ299YBHNdsV9"));
+  const querySnapshot = await getDocs(q);
+querySnapshot.forEach((doc) => {
+  // doc.data() is never undefined for query doc snapshots
+  console.log(doc.id, " => ", doc.data());
+});
+
 }
 
-const toggleVisibility = (e) => {
-  console.log(e.target)
-  e.target.classList.toggle("hidden");
+getChats();
+
+function getMsg() {
+  const messages = [];
+  for (const message of messages) {
+    if (message.user === currentUser.name) {
+      const msg = document.createElement("div");
+      msg.className = "outgoing-chats";
+      msg.innerHTML = `<div class="outgoing-chats-img">
+      <img src=${currentUser.img} />
+    </div>
+    <div class="outgoing-msg">
+      <div class="outgoing-chats-msg">
+        <p class="multi-msg">
+      ${message.msg}
+        </p>
+        <span class="time">${message.time}</span>
+      </div>
+    </div>`;
+      msgPage.appendChild(msg);
+    } else {
+      const msg = document.createElement("div");
+      msg.className = "received-chats";
+      msg.innerHTML = `<div class="received-chats-img">
+      <img src="https://mdbcdn.b-cdn.net/img/new/avatars/3.webp" />
+    </div>
+    <div class="received-msg">
+      <div class="received-msg-inbox">
+        <p class="single-msg">
+        ${message.msg}
+        </p>
+        <span class="time">${message.time}</span>
+      </div>
+    </div>`;
+      msgPage.appendChild(msg);
+    }
+    msgPage.scrollTo(0, msgPage.scrollHeight);
+  }
 }
 
-menuBox.addEventListener("mouseenter", toggleVisibility)
+getMsg();
+sendMsgButton.addEventListener("click", sendMsg);
