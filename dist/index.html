@@ -20,13 +20,17 @@
   <body>
     <div id="backdrop" ></div>
     <div id="modal">
-      <h1>Sign Up</h1>
+      <h1>Login</h1>
+      <div id="name-input-box" class="hidden">
+        <label for="name">Enter Full Name</label>
+        <input type="text" name="name" id="name-input" />
+      </div>
       <label for="email">Enter Email</label>
       <input type="email" name="email" id="email-input" />
       <label for="password">Enter Password</label>
       <input type="password" name="password" id="password-input" />
       <button id="modal-button">Login</button>
-      <p>Already Sign Up? <a>Log In</a></p>
+      <p>Don't have an account? <a>Sign Up</a></p>
       <button id="google-button">Log In With Google</button>
     </div>
     <div id="page">
@@ -39,6 +43,9 @@
           <div id="new-chat-input-box" class="hidden">
             <input type="email" name="email" id="new-chat-input" placeholder="Enter Someone's Email"/>
             <button id="new-chat-button">Send</button>
+          </div>
+          <div id="request-box">
+            <button id="show-requests-btn">SHOW REQUESTS</button>
           </div>
         </div>
       </div>
