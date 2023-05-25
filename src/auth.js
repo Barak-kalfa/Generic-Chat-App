@@ -4,15 +4,15 @@ import {
   signInWithEmailAndPassword,
   signOut,
   signInWithPopup,
-} from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
+} from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 import { auth, googleProvider } from "./firebase-config.js";
-
+import { getChats } from "./app.js";
 const backdrop = document.getElementById("backdrop");
 const modal = document.getElementById("modal");
 const emailInput = document.getElementById("email-input");
 const passwordInput = document.getElementById("password-input");
 const modalButton = document.getElementById("modal-button");
-export let currentUser = localStorage.getItem("uid") || null;
+export let currentUser = null;
 const formType = document.querySelector("h1");
 const changeFormLink = document.querySelector("a");
 const googleButton = document.querySelector("#google-button");
@@ -20,13 +20,11 @@ const logOutButton = document.querySelector("#log-out-button");
 
 const handleModalClick = async () => {
   try {
-    const email = emailInput.value;
-    const password = passwordInput.value;
     if (formType.innerText === "Sign Up") {
       const userCredentials = await createUserWithEmailAndPassword(
         auth,
-        email,
-        password
+        emailInput.value,
+        passwordInput.value
       );
       currentUser = userCredentials.user;
       localStorage.setItem("uid", currentUser.uid);
@@ -34,11 +32,12 @@ const handleModalClick = async () => {
     } else if (formType.innerText === "Log In") {
       const userCredentials = await signInWithEmailAndPassword(
         auth,
-        email,
-        password
-      );
-      currentUser = userCredentials.user;
+        emailInput.value,
+        passwordInput.value
+        );
+        currentUser = userCredentials.user;
       localStorage.setItem("uid", currentUser.uid);
+      getChats(currentUser.uid)
       toggleModal();
     }
   } catch (err) {
@@ -84,4 +83,8 @@ const handleChangeForm = () => {
 
 changeFormLink.addEventListener("click", handleChangeForm);
 
-if (!currentUser) toggleModal();
+if (!localStorage.getItem("uid")){
+  toggleModal();
+} else {
+  currentUser = localStorage.getItem("uid");
+}

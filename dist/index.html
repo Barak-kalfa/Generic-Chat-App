@@ -18,8 +18,8 @@
     <title>Brain Storm</title>
   </head>
   <body>
-    <div id="backdrop" class=""></div>
-    <div id="modal" class="">
+    <div id="backdrop" ></div>
+    <div id="modal">
       <h1>Sign Up</h1>
       <label for="email">Enter Email</label>
       <input type="email" name="email" id="email-input" />
@@ -29,13 +29,17 @@
       <p>Already Sign Up? <a>Log In</a></p>
       <button id="google-button">Log In With Google</button>
     </div>
-    <div id="page" class="">
-      <div id="menu-box" class="">
+    <div id="page">
+      <div id="menu-box">
         <!-- <ul id="menu-list"></ul> -->
-        <div id="groups-bar" class="sidebar">
+        <div id="chats-bar" class="sidebar">
           <a href="#">Menu></a>
-          <a href="#">Start New Chat</a>
           <a id="log-out-button" href="#">Log Out</a>
+          <a id="new-chat-link">Start New Chat</a>
+          <div id="new-chat-input-box" class="hidden">
+            <input type="email" name="email" id="new-chat-input" placeholder="Enter Someone's Email"/>
+            <button id="new-chat-button">Send</button>
+          </div>
         </div>
       </div>
       <!-- <div id="chat-box" class="">
