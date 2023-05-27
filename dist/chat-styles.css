@@ -10,10 +10,8 @@
   margin: auto;
   margin-top: 2rem;
   letter-spacing: 0.5px;
-  /* height: 100%; */
   display: flex;
   flex-direction: column;
-  /* background: grey; */
   /* justify-content: space-evenly; */
 }
 
@@ -37,14 +35,15 @@ img {
 }
 /* Styling the profile picture */
 .msgimg {
-  margin-left: 2%;
-  float: left;
+  margin: 10px;
 }
 
 .container1 {
   width: 100%;
   height: auto;
   margin: 0;
+  display: flex;
+  justify-content: end;
 }
 
 /* styling user-name */
@@ -70,6 +69,7 @@ img {
 
 .chats {
   padding: 30px 15px 0 25px;
+  height: 70vh;
 }
 
 .msg-page {
@@ -77,6 +77,11 @@ img {
   overflow-y: auto;
 }
 
+.no-messages {
+  font-size: 50px;
+  display: flex;
+  justify-content: center;
+}
 /* Styling the msg-bottom container */
 .msg-bottom {
   border-top: 1px solid #ccc;
@@ -97,6 +102,7 @@ img {
   display: flex;
   flex-wrap: wrap;
   align-items: stretch;
+  
 }
 
 .input-group > .form-control {
@@ -141,7 +147,6 @@ img {
 }
 
 input:focus {
-  outline: none;
   border: none !important;
   box-shadow: none !important;
 }
@@ -150,12 +155,22 @@ input:focus {
   font-weight: bold !important;
 }
 
+/* .circle-box {
+  border: 2px solid grey;
+  border-radius: 50px;
+  width: fit-content;
+  height: 100%;
+} */
 /* Styling the avatar  */
 received-chats-img {
   display: inline-block;
   width: 50px;
   float: left;
 }
+/* 
+#msg-input {
+
+} */
 
 .received-msg {
   display: inline-block;
