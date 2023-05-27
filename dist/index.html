@@ -22,12 +22,12 @@
     <div id="modal">
       <h1>Login</h1>
       <div id="name-input-box" class="hidden">
-        <label for="name">Enter Full Name</label>
+        <label for="name-input">Enter Full Name</label>
         <input type="text" name="name" id="name-input" />
       </div>
-      <label for="email">Enter Email</label>
+      <label for="email-input">Enter Email</label>
       <input type="email" name="email" id="email-input" />
-      <label for="password">Enter Password</label>
+      <label for="password-input">Enter Password</label>
       <input type="password" name="password" id="password-input" />
       <button id="modal-button">Login</button>
       <p>Don't have an account? <a>Sign Up</a></p>
@@ -37,16 +37,14 @@
       <div id="menu-box">
         <!-- <ul id="menu-list"></ul> -->
         <div id="chats-bar" class="sidebar">
-          <a href="#">Menu></a>
-          <a id="log-out-button" href="#">Log Out</a>
+          <div id="new-chat-input-box" class="">
+            <input  id="new-chat-input"/>
+            <button id="new-chat-button">></button>
+          </div>
+          <a id="log-out-button">Log Out</a>
           <a id="new-chat-link">Start New Chat</a>
-          <div id="new-chat-input-box" class="hidden">
-            <input type="email" name="email" id="new-chat-input" placeholder="Enter Someone's Email"/>
-            <button id="new-chat-button">Send</button>
-          </div>
-          <div id="request-box">
-            <button id="show-requests-btn">SHOW REQUESTS</button>
-          </div>
+          <a id="new-group-link">Start New Group</a>
+          <a id="invite-link">Invite To Group</a>
         </div>
       </div>
       <!-- <div id="chat-box" class="">

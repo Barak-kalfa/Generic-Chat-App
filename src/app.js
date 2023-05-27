@@ -20,25 +20,28 @@ const msgPage = document.querySelector(".msg-page");
 const chatsBar = document.querySelector("#chats-bar");
 const newChatBox = document.querySelector("#new-chat-input-box");
 const newChatLink = document.querySelector("#new-chat-link");
+const newGroupLink = document.querySelector("#new-group-link");
+const inviteLink = document.querySelector("#invite-link");
 const newChatInput = document.querySelector("#new-chat-input");
 const newChatButton = document.querySelector("#new-chat-button");
 
 const usersRef = collection(db, "users");
 const chatsRef = collection(db, "chats");
 const msgRef = collection(db, "messages");
+export let chatsSnapshot;
 let currentChatId;
-const currentUser = localStorage.getItem("uid")
+let currentUser = localStorage.getItem("uid")
   ? await setCurrentUser(localStorage.getItem("uid"))
   : undefined;
 console.log(currentUser);
 
-async function setCurrentUser(uid) {
+export async function setCurrentUser(uid) {
   try {
     const userInfo = await getDoc(doc(db, "users", uid));
     const user = userInfo.data();
     getChats(user.email);
     user.uid = uid;
-    user.img = "https://mdbcdn.b-cdn.net/img/new/avatars/2.webp"
+    user.img = "https://mdbcdn.b-cdn.net/img/new/avatars/2.webp";
     return user;
   } catch (e) {
     console.log(e.message);
@@ -58,44 +61,73 @@ export async function createUser(name, email, uid) {
   }
 }
 
+function handleMenuButton(input, callback) {
+  switch (callback) {
+    case "startNewChat":
+      startNewChat(input);
+      break;
+    case "startNewGroup":
+      startNewGroup(input);
+      break;
+    case "inviteToGroup":
+      inviteToGroup(input);
+      break;
+    default:
+      console.log(callback);
+  }
+}
+
 async function startNewChat(email) {
   //ADD EMAIL ALREADY IN CHATS LIST CHECK
   try {
-    const chat = { name: "", users: [currentUser.email, email], messages: [] };
+    const chat = { name: "", users: [currentUser.email, email] };
     const docRef = await addDoc(collection(db, "chats"), chat);
-    await updateDoc(doc(db, "users", currentUser.uid), {
-      chats: arrayUnion(docRef.id),
-    });
   } catch (err) {
     console.log(err);
   }
 }
 
-async function startNewGroup(name) {}
+async function startNewGroup(name) {
+  try {
+    const chat = { name: name, users: [currentUser.email] };
+    const docRef = await addDoc(collection(db, "chats"), chat);
+  } catch (err) {
+    console.log(err);
+  }
+}
 
-export async function getChats(currentUserEmail) {
-  const q = query(chatsRef, where("users", "array-contains", currentUserEmail));  
-  const ChatsSnapshot = await onSnapshot(q, (snapshot) => {
+async function inviteToGroup(email) {
+  // const userInfo = await query(usersRef, where("email", "==", email));
+  //ADD USER NOT FOUND CHECK
+  await updateDoc(doc(db, "chats", currentChatId), {
+    users: arrayUnion(email),
+  });
+}
+
+async function getChats(currentUserEmail) {
+  if (chatsSnapshot) chatsSnapshot(); //detaches last snapshot
+  const q = query(chatsRef, where("users", "array-contains", currentUserEmail));
+  chatsSnapshot = onSnapshot(q, (snapshot) => {
     snapshot.docChanges().forEach((change) => {
       if (change.type === "added") {
-          console.log("New Chat: ", change.doc.data());
-          const chatBox = document.createElement("a");
-          const chat = change.doc.data();
-          if (chat.name === "") {
-            chat.name = chat.users[1];
-          }
-          chatBox.innerText = chat.name;
-          chatBox.addEventListener("click", () => {
-            getMessages(change.doc.id);
-            setCurrentChat(change.doc.id);
-          });
-          chatsBar.appendChild(chatBox);
+        console.log("New Chat: ", change.doc.data());
+        const chatBox = document.createElement("a");
+        const chat = change.doc.data();
+        if (chat.name === "") {
+          chat.name = chat.users.filter((chat) => chat !== currentUser.email);
+        }
+        chatBox.innerText = chat.name;
+        chatBox.addEventListener("click", () => {
+          getMessages(change.doc.id);
+          setCurrentChat(change.doc.id);
+        });
+        chatsBar.appendChild(chatBox);
       }
       if (change.type === "modified") {
-          console.log("Modified city: ", change.doc.data());
+        console.log("Modified city: ", change.doc.data());
       }
       if (change.type === "removed") {
-          console.log("Removed city: ", change.doc.data());
+        console.log("Removed city: ", change.doc.data());
       }
     });
   });
@@ -152,55 +184,55 @@ function renderMessage(message) {
   msgPage.scrollTo(0, msgPage.scrollHeight);
 }
 
+export let messagesSnapshot;
 async function getMessages(chatId) {
-  
+  if (messagesSnapshot) messagesSnapshot();
   msgPage.innerHTML = "";
   try {
     const q = query(msgRef, where("chatId", "==", chatId));
-    const messagesSnapshot = await onSnapshot(q, (snapshot) => {
+    messagesSnapshot = onSnapshot(q, (snapshot) => {
+      snapshot.forEach((message) => console.log(message));
       snapshot.docChanges().forEach((change) => {
-        console.log(change);
         if (change.type === "added") {
-            console.log("New Message: ", change.doc.data());
-            renderMessage(change.doc.data())
+          console.log("New Message: ", change.doc.data());
+          renderMessage(change.doc.data());
         }
         if (change.type === "modified") {
-            console.log("Modified city: ", change.doc.data());
+          console.log("Modified city: ", change.doc.data());
         }
         if (change.type === "removed") {
-            console.log("Removed city: ", change.doc.data());
+          console.log("Removed city: ", change.doc.data());
         }
       });
     });
-    // const messages = [];
-    // const renderedMessages = [];
-    // const chatMessages = await onSnapshot(q, (querySnapshot) => {
-    //   querySnapshot.forEach((message) => {
-    //     messages.push(message.data());
-    //   });
-    //   const newMsgNum = messages.length - renderedMessages.length;
-    //   if (messages.length === 0) {
-    //     const noMessages = document.createElement("div");
-    //     noMessages.innerHTML = "<p>No Messages Yet</p>";
-    //     noMessages.className = "no-messages";
-    //     msgPage.appendChild(noMessages);
-    //   } else if (messages.length > renderedMessages) {
-    //     for (let i = messages.length - newMsgNum; i < messages.length; i++) {
-    //       renderMessage(messages[i]);
-    //       renderedMessages.push(messages[i]);
-    //     }
-    //   }
-    // });
   } catch (err) {
     console.log(err);
   }
 }
 
-// getChats(localStorage.getItem("uid"));
 sendMsgButton.addEventListener("click", sendMsg);
+
 newChatLink.addEventListener("click", () => {
-  newChatBox.classList.toggle("hidden");
+  newChatInput.setAttribute("type", "email");
+  newChatInput.setAttribute("name", "startNewChat");
+  newChatInput.setAttribute("placeholder", "Enter Someone's Email");
+  newChatInput.focus();
 });
+
+newGroupLink.addEventListener("click", () => {
+  newChatInput.setAttribute("type", "text");
+  newChatInput.setAttribute("name", "startNewGroup");
+  newChatInput.setAttribute("placeholder", "Enter Group's Name");
+  newChatInput.focus();
+});
+
+inviteLink.addEventListener("click", () => {
+  newChatInput.setAttribute("type", "email");
+  newChatInput.setAttribute("name", "inviteToGroup");
+  newChatInput.setAttribute("placeholder", "Invite Someone");
+  newChatInput.focus();
+});
+
 newChatButton.addEventListener("click", () => {
-  startNewChat(newChatInput.value);
+  handleMenuButton(newChatInput.value, newChatInput.name);
 });

@@ -6,7 +6,7 @@ import {
   signInWithPopup,
 } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 import { auth, googleProvider } from "./firebase-config.js";
-import { getChats, createUser } from "./app.js";
+import { createUser, chatsSnapshot, messagesSnapshot, setCurrentUser } from "./app.js";
 
 const backdrop = document.getElementById("backdrop");
 const modal = document.getElementById("modal");
@@ -21,36 +21,36 @@ const googleButton = document.querySelector("#google-button");
 const logOutButton = document.querySelector("#log-out-button");
 const msgPage = document.querySelector(".msg-page");
 
-
-const handleModalClick = async () => {
+async function handleModalClick() {
   try {
-    let userCredentials
+    let userCredentials;
     if (formType.innerText === "Sign Up") {
       userCredentials = await createUserWithEmailAndPassword(
         auth,
         emailInput.value,
         passwordInput.value
-        );
-        const user = userCredentials.user;
-        createUser(nameInput.value, user.email, user.uid)
+      );
+      const user = userCredentials.user;
+      createUser(nameInput.value, user.email, user.uid);
       localStorage.setItem("uid", user.uid);
+      setCurrentUser(user.uid)
       toggleModal();
     } else if (formType.innerText === "Login") {
       userCredentials = await signInWithEmailAndPassword(
         auth,
         emailInput.value,
         passwordInput.value
-        );
-        const user = userCredentials.user;
+      );
+      const user = userCredentials.user;
       localStorage.setItem("uid", user.uid);
-      console.log(user);
-      getChats(user.email)
+      setCurrentUser(user.uid)
+      // getChats(user.email)
       toggleModal();
     }
   } catch (err) {
     console.log(err.code, err.message);
   }
-};
+}
 
 async function signInWithGoogle() {
   try {
@@ -66,8 +66,11 @@ async function signInWithGoogle() {
 async function logOut() {
   try {
     await signOut(auth);
+    chatsSnapshot && chatsSnapshot();
+    messagesSnapshot && messagesSnapshot();
     localStorage.removeItem("uid");
     toggleModal();
+    window.location.replace("/dist/sign-in.html");
   } catch (err) {
     console.log(err.code, err.message);
   }
@@ -89,7 +92,7 @@ const handleChangeForm = () => {
     modalButton.innerText = "Login";
     changeFormLink.innerText = "Sign Up";
     nameInput.classList.toggle("hidden");
-  }else{
+  } else {
     formType.innerText = "Sign Up";
     modalButton.innerText = "Sign Up";
     changeFormLink.innerText = "Login";
