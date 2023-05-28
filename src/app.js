@@ -27,7 +27,7 @@ const newChatInput = document.querySelector("#new-chat-input");
 const newChatButton = document.querySelector("#new-chat-button");
 const usersHeader = document.querySelector(".container1");
 const container = document.querySelector(".container");
-const chatHeader = document.querySelector("#chat-with")
+const chatHeader = document.querySelector("#chat-with");
 
 const usersRef = collection(db, "users");
 const chatsRef = collection(db, "chats");
@@ -36,13 +36,14 @@ const msgRef = collection(db, "messages");
 export let chatsSnapshot;
 let currentChatId;
 export var currentUser;
-if(localStorage.getItem("uid")) await setCurrentUser(localStorage.getItem("uid"))
+if (localStorage.getItem("uid"))
+  await setCurrentUser(localStorage.getItem("uid"));
 
 console.log(currentUser);
 
 export async function setCurrentUser() {
   try {
-    const uid = localStorage.getItem("uid")
+    const uid = localStorage.getItem("uid");
     const userInfo = await getDoc(doc(db, "users", uid));
     const user = userInfo.data();
     getChats(user.email);
@@ -61,7 +62,7 @@ export async function createUser(name, email, uid) {
       fullName: name,
       email: email,
       chats: [],
-      img: ""
+      img: "",
     });
   } catch (err) {
     console.log(err);
@@ -154,19 +155,19 @@ export async function getChats(currentUserEmail) {
   chatsSnapshot = onSnapshot(q, (snapshot) => {
     snapshot.docChanges().forEach(async (change) => {
       const chat = change.doc.data();
-        chat.id = change.doc.id;
-        if (chat.name === "") {
-          //chat.name != "" means its a group
-          const otherUserEmail = chat.users.filter(
-            (user) => user !== currentUser.email
-          );
-          const otherUser = await getUsers("email", "==", otherUserEmail[0]);
-          chat.name = otherUser[0].data().fullName;
-          chat.img = otherUser[0].data().img;
-        }
-        renderChat(chat);
+      chat.id = change.doc.id;
+      if (chat.name === "") {
+        //chat.name != "" means its a group
+        const otherUserEmail = chat.users.filter(
+          (user) => user !== currentUser.email
+        );
+        const otherUser = await getUsers("email", "==", otherUserEmail[0]);
+        chat.name = otherUser[0].data().fullName;
+        chat.img = otherUser[0].data().img;
+      }
       if (change.type === "added") {
         console.log("New Chat: ", change.doc.data());
+        renderChat(chat);
       }
       if (change.type === "modified") {
         console.log("Modified city: ", change.doc.data());
@@ -178,13 +179,12 @@ export async function getChats(currentUserEmail) {
   });
 }
 
-export let membersSnapshot;
 async function setCurrentChat(chatId) {
-  if (currentChatId) membersSnapshot();
+  usersHeader.innerHTML = "";
   currentChatId = chatId;
   const chat = await getDoc(doc(db, "chats", chatId));
   const q = query(usersRef, where("email", "in", chat.data().users));
-  membersSnapshot = await getDocs(q);
+  const membersSnapshot = await getDocs(q);
   membersSnapshot.forEach((doc) => {
     const groupMember = document.createElement("img");
     groupMember.src = doc.data().img;
@@ -202,19 +202,21 @@ async function sendMsg() {
     text: messageInput.value,
     userEmail: currentUser.email,
     userName: currentUser.fullName,
+    userImgUrl: currentUser.img,
   };
   await setDoc(doc(collection(db, "messages")), message);
   const chatRef = await doc(db, "chats", currentChatId);
   await updateDoc(chatRef, { lastMessage: message });
+  messageInput.value = "";
 }
 
 function renderMessage(message) {
-    //outgoing messages
+  //outgoing messages
   if (message.userEmail === currentUser.email) {
     const msg = document.createElement("div");
     msg.className = "outgoing-chats";
     msg.innerHTML = `<div class="outgoing-chats-img">
-          <img src=${message.img} />
+          <img src=${message.userImgUrl} />
           </div>
           <div class="outgoing-msg">
           <div class="outgoing-chats-msg">
@@ -230,7 +232,7 @@ function renderMessage(message) {
     const msg = document.createElement("div");
     msg.className = "received-chats";
     msg.innerHTML = `<div class="received-chats-img">
-    <img src="${message.img}" />
+    <img src="${message.userImgUrl}" />
     </div>
       <div class="received-msg">
       <div class="received-msg-inbox">
@@ -246,7 +248,9 @@ function renderMessage(message) {
 }
 
 function renderChat(chat) {
-  const time = chat.lastMessage.time ? chat.lastMessage.time.toDate().toDateString() : "";
+  const time = chat.lastMessage.time
+    ? chat.lastMessage.time.toDate().toDateString()
+    : "";
   const chatBox = document.createElement("div");
   chatBox.className = "menu-chat-box";
   chatBox.innerHTML = `  <div class="menu-chat-box-img">
@@ -257,7 +261,9 @@ function renderChat(chat) {
     <span class="menu-chat-box-title">${chat.name}</span>
     <span class="menu-chat-box-time">${time}</span>
   </div>
-  <p class="menu-chat-box-msg">${chat.lastMessage.text ? chat.lastMessage.text : "No messages yet"}</p>
+  <p class="menu-chat-box-msg">${
+    chat.lastMessage.text ? chat.lastMessage.text : "No messages yet"
+  }</p>
 </div>`;
   chatBox.addEventListener("click", () => {
     setCurrentChat(chat.id);
@@ -272,7 +278,7 @@ export let messagesSnapshot;
 
 async function getMessages(chatId) {
   if (messagesSnapshot) messagesSnapshot();
-  msgPage.innerHTML = "";
+  msgPage.innerHTML = `<div class="loader"></div>`;
   try {
     const q = query(
       msgRef,
@@ -280,12 +286,10 @@ async function getMessages(chatId) {
       orderBy("time", "asc")
     );
     messagesSnapshot = onSnapshot(q, (snapshot) => {
+      msgPage.innerHTML = "";
       snapshot.docChanges().forEach(async (change) => {
         const message = change.doc.data();
-        const user = await getUsers("email", "==", message.userEmail)
-        message.img = user[0].data().img;
         renderMessage(message);
-        console.log("message change time:", change.time);
         if (change.type === "added") {
           console.log("New Message: ", change.doc.data());
         }
@@ -303,6 +307,7 @@ async function getMessages(chatId) {
 }
 
 sendMsgButton.addEventListener("click", sendMsg);
+messageInput.addEventListener("keyup", (e) => e.key === "Enter" && sendMsg());
 
 newChatLink.addEventListener("click", () => {
   newChatInput.setAttribute("type", "email");
