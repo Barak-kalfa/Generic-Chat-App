@@ -13,8 +13,8 @@
     />
     <script src="../src/firebase-config.js" type="module" defer></script>
     <script type="module" src="../src/mock/mock.js"></script>
-    <script src="../src/auth.js" type="module" defer></script>
     <script src="../src/app.js" type="module" defer></script>
+    <script src="../src/auth.js" type="module" defer></script>
     <title>Brain Storm</title>
   </head>
   <body>
@@ -35,13 +35,16 @@
     </div>
     <div id="page">
       <div id="menu-box">
+        <div>
+          <img src="../src/images/menu_FILL0_wght400_GRAD0_opsz48.svg">
+        </div>
         <!-- <ul id="menu-list"></ul> -->
         <div id="chats-bar" class="sidebar">
+          <a id="log-out-button">Log Out</a>
           <div id="new-chat-input-box" class="">
             <input  id="new-chat-input"/>
             <button id="new-chat-button">></button>
           </div>
-          <a id="log-out-button">Log Out</a>
           <a id="new-chat-link">Start New Chat</a>
           <a id="new-group-link">Start New Group</a>
           <a id="invite-link">Invite To Group</a>
@@ -49,30 +52,29 @@
       </div>
       <!-- <div id="chat-box" class="">
         <div id="members-box"><ul id="members-list"></ul></div> -->
-          <div class="container">
+        <div id="no-chat-page"></div>
+          <div class="container hidden">
+
           <!-- msg-header section starts -->
           <div class="msg-header">
             <div class="container1">
               <!-- <img src="https://mdbcdn.b-cdn.net/img/new/avatars/2.webp" class="msgimg" /> -->
-              <div class="active">
                 
-                <p idd="chat-with">
-                  
-                </p>
-              </div>
+                <!-- <p id="chat-with">
+                </p> -->
             </div>
           </div>
           <!-- msg-header section ends -->
 
           <!-- Chat inbox  -->
-          <div class="chat-page">
+          <div class="chat-page ">
             <div class="msg-inbox">
               <div class="chats">
                 <!-- Message container -->
                 <div class="msg-page">
                   <!-- Incoming messages -->
 
-              <!-- msg-bottom section -->
+             <!-- msg-bottom section -->
 
             
             </div>

@@ -26,6 +26,8 @@ const inviteLink = document.querySelector("#invite-link");
 const newChatInput = document.querySelector("#new-chat-input");
 const newChatButton = document.querySelector("#new-chat-button");
 const usersHeader = document.querySelector(".container1");
+const container = document.querySelector(".container");
+const chatHeader = document.querySelector("#chat-with")
 
 const usersRef = collection(db, "users");
 const chatsRef = collection(db, "chats");
@@ -33,20 +35,20 @@ const msgRef = collection(db, "messages");
 
 export let chatsSnapshot;
 let currentChatId;
-let currentUser = localStorage.getItem("uid")
-  ? await setCurrentUser(localStorage.getItem("uid"))
-  : undefined;
+export var currentUser;
+if(localStorage.getItem("uid")) await setCurrentUser(localStorage.getItem("uid"))
 
 console.log(currentUser);
 
-export async function setCurrentUser(uid) {
+export async function setCurrentUser() {
   try {
+    const uid = localStorage.getItem("uid")
     const userInfo = await getDoc(doc(db, "users", uid));
     const user = userInfo.data();
     getChats(user.email);
     user.uid = uid;
-    user.img = "https://mdbcdn.b-cdn.net/img/new/avatars/2.webp";
-    return user;
+    user.img = user.img;
+    currentUser = user;
   } catch (e) {
     console.log(e.message);
     return null;
@@ -59,27 +61,25 @@ export async function createUser(name, email, uid) {
       fullName: name,
       email: email,
       chats: [],
+      img: ""
     });
   } catch (err) {
     console.log(err);
   }
 }
 
-async function getUsers(field, operator, value){
-  console.log(field, operator, value);
+async function getUsers(field, operator, value) {
   const users = [];
   // field = "email";
   //  operator = "==";
   // value = "b@b.com";
-  const q =  query(usersRef, where(field, operator, value));
+  const q = query(usersRef, where(field, operator, value));
   const querySnapshot = await getDocs(q);
   await querySnapshot.forEach((user) => {
     users.push(user);
-  })
-return users;
+  });
+  return users;
 }
-
-
 
 function handleMenuButton(input, callback) {
   switch (callback) {
@@ -93,7 +93,7 @@ function handleMenuButton(input, callback) {
       inviteToGroup(input);
       break;
     default:
-      console.log(callback);
+      console.log("handleMenuButton-default");
   }
 }
 
@@ -119,13 +119,17 @@ async function startNewChat(email) {
 
 async function startNewGroup(name) {
   try {
-    const chat = { name: name, users: [currentUser.email], lastMessage: {
-      chatId: null,
-      time: null,
-      text: null,
-      userEmail: null,
-      userName: null,
-    } };
+    const chat = {
+      name: name,
+      users: [currentUser.email],
+      lastMessage: {
+        chatId: null,
+        time: null,
+        text: null,
+        userEmail: null,
+        userName: null,
+      },
+    };
     const docRef = await addDoc(collection(db, "chats"), chat);
   } catch (err) {
     console.log(err);
@@ -140,26 +144,29 @@ async function inviteToGroup(email) {
   });
 }
 
-async function getChats(currentUserEmail) {
+export async function getChats(currentUserEmail) {
   if (chatsSnapshot) chatsSnapshot(); //detaches last snapshot
-  const q = query(chatsRef, where("users", "array-contains", currentUserEmail), orderBy("lastMessage.time", "asc"));
+  const q = query(
+    chatsRef,
+    where("users", "array-contains", currentUserEmail),
+    orderBy("lastMessage.time", "asc")
+  );
   chatsSnapshot = onSnapshot(q, (snapshot) => {
-    snapshot.docChanges().forEach(async(change) => {
-      if (change.type === "added") {
-        console.log("New Chat: ", change.doc.data());
-        const chatBox = document.createElement("a");
-        const chat = change.doc.data();
-        if (chat.name === "") { //chat.name != "" means its a group
-          const otherUserEmail = chat.users.filter((chat) => chat !== currentUser.email);
+    snapshot.docChanges().forEach(async (change) => {
+      const chat = change.doc.data();
+        chat.id = change.doc.id;
+        if (chat.name === "") {
+          //chat.name != "" means its a group
+          const otherUserEmail = chat.users.filter(
+            (user) => user !== currentUser.email
+          );
           const otherUser = await getUsers("email", "==", otherUserEmail[0]);
           chat.name = otherUser[0].data().fullName;
+          chat.img = otherUser[0].data().img;
         }
-        chatBox.innerText = chat.name;
-        chatBox.addEventListener("click", () => {
-          setCurrentChat(change.doc.id);
-          getMessages(currentChatId);
-        });
-        chatsBar.appendChild(chatBox);
+        renderChat(chat);
+      if (change.type === "added") {
+        console.log("New Chat: ", change.doc.data());
       }
       if (change.type === "modified") {
         console.log("Modified city: ", change.doc.data());
@@ -179,9 +186,8 @@ async function setCurrentChat(chatId) {
   const q = query(usersRef, where("email", "in", chat.data().users));
   membersSnapshot = await getDocs(q);
   membersSnapshot.forEach((doc) => {
-    console.log(doc.id, " => ", doc.data());
     const groupMember = document.createElement("img");
-    groupMember.src = "https://mdbcdn.b-cdn.net/img/new/avatars/2.webp";
+    groupMember.src = doc.data().img;
     groupMember.classNames = "msgimg";
     usersHeader.appendChild(groupMember);
   });
@@ -198,16 +204,17 @@ async function sendMsg() {
     userName: currentUser.fullName,
   };
   await setDoc(doc(collection(db, "messages")), message);
-  const chatRef = await doc(db, "chats", currentChatId)
+  const chatRef = await doc(db, "chats", currentChatId);
   await updateDoc(chatRef, { lastMessage: message });
 }
 
 function renderMessage(message) {
+    //outgoing messages
   if (message.userEmail === currentUser.email) {
     const msg = document.createElement("div");
     msg.className = "outgoing-chats";
     msg.innerHTML = `<div class="outgoing-chats-img">
-          <img src=${currentUser.img} />
+          <img src=${message.img} />
           </div>
           <div class="outgoing-msg">
           <div class="outgoing-chats-msg">
@@ -219,22 +226,46 @@ function renderMessage(message) {
           </div>`;
     msgPage.appendChild(msg);
   } else {
+    //received messages
     const msg = document.createElement("div");
     msg.className = "received-chats";
     msg.innerHTML = `<div class="received-chats-img">
-      <img src="https://mdbcdn.b-cdn.net/img/new/avatars/3.webp" />
-      </div>
+    <img src="${message.img}" />
+    </div>
       <div class="received-msg">
       <div class="received-msg-inbox">
       <p class="single-msg">
       ${message.text}
       </p>
-      <span class="time">${message.time}</span>
+      <span class="time">${new Date(message.time.toDate())}</span>
       </div>
       </div>`;
     msgPage.appendChild(msg);
   }
   msgPage.scrollTo(0, msgPage.scrollHeight);
+}
+
+function renderChat(chat) {
+  const time = chat.lastMessage.time ? chat.lastMessage.time.toDate().toDateString() : "";
+  const chatBox = document.createElement("div");
+  chatBox.className = "menu-chat-box";
+  chatBox.innerHTML = `  <div class="menu-chat-box-img">
+  <img src="${chat.img}" >
+</div>
+<div>
+  <div>
+    <span class="menu-chat-box-title">${chat.name}</span>
+    <span class="menu-chat-box-time">${time}</span>
+  </div>
+  <p class="menu-chat-box-msg">${chat.lastMessage.text ? chat.lastMessage.text : "No messages yet"}</p>
+</div>`;
+  chatBox.addEventListener("click", () => {
+    setCurrentChat(chat.id);
+    msgPage.innerHTML = "";
+    getMessages(chat.id);
+    container.classList.remove("hidden");
+  });
+  chatsBar.appendChild(chatBox);
 }
 
 export let messagesSnapshot;
@@ -249,11 +280,14 @@ async function getMessages(chatId) {
       orderBy("time", "asc")
     );
     messagesSnapshot = onSnapshot(q, (snapshot) => {
-      snapshot.docChanges().forEach((change) => {
-        console.log(change.time);
+      snapshot.docChanges().forEach(async (change) => {
+        const message = change.doc.data();
+        const user = await getUsers("email", "==", message.userEmail)
+        message.img = user[0].data().img;
+        renderMessage(message);
+        console.log("message change time:", change.time);
         if (change.type === "added") {
           console.log("New Message: ", change.doc.data());
-          renderMessage(change.doc.data());
         }
         if (change.type === "modified") {
           console.log("Modified city: ", change.doc.data());

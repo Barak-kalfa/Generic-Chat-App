@@ -6,7 +6,7 @@ import {
   signInWithPopup,
 } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 import { auth, googleProvider } from "./firebase-config.js";
-import { createUser, chatsSnapshot, messagesSnapshot, setCurrentUser } from "./app.js";
+import { createUser, chatsSnapshot, messagesSnapshot, setCurrentUser, getChats, currentUser } from "./app.js";
 
 const backdrop = document.getElementById("backdrop");
 const modal = document.getElementById("modal");
@@ -14,7 +14,6 @@ const nameInput = document.getElementById("name-input");
 const emailInput = document.getElementById("email-input");
 const passwordInput = document.getElementById("password-input");
 const modalButton = document.getElementById("modal-button");
-export let currentUser = null;
 const formType = document.querySelector("h1");
 const changeFormLink = document.querySelector("a");
 const googleButton = document.querySelector("#google-button");
@@ -44,7 +43,7 @@ async function handleModalClick() {
       const user = userCredentials.user;
       localStorage.setItem("uid", user.uid);
       setCurrentUser(user.uid)
-      // getChats(user.email)
+      getChats(user.email)
       toggleModal();
     }
   } catch (err) {
@@ -69,8 +68,8 @@ async function logOut() {
     chatsSnapshot && chatsSnapshot();
     messagesSnapshot && messagesSnapshot();
     localStorage.removeItem("uid");
+    location.reload()
     toggleModal();
-    window.location.replace("/dist/sign-in.html");
   } catch (err) {
     console.log(err.code, err.message);
   }
