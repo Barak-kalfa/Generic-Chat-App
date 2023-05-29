@@ -18,8 +18,7 @@ import {
 const sendMsgButton = document.querySelector(".send-icon");
 const messageInput = document.querySelector("#msg-input");
 const msgPage = document.querySelector(".msg-page");
-const chatsBar = document.querySelector("#chats-bar");
-const newChatBox = document.querySelector("#new-chat-input-box");
+const chatsList = document.querySelector("#chats-list");
 const newChatLink = document.querySelector("#new-chat-link");
 const newGroupLink = document.querySelector("#new-group-link");
 const inviteLink = document.querySelector("#invite-link");
@@ -27,7 +26,8 @@ const newChatInput = document.querySelector("#new-chat-input");
 const newChatButton = document.querySelector("#new-chat-button");
 const usersHeader = document.querySelector(".container1");
 const container = document.querySelector(".container");
-const chatHeader = document.querySelector("#chat-with");
+const loader = document.createElement("div");
+loader.classList.add("loader");
 
 const usersRef = collection(db, "users");
 const chatsRef = collection(db, "chats");
@@ -35,7 +35,7 @@ const msgRef = collection(db, "messages");
 
 export let chatsSnapshot;
 let currentChatId;
-export var currentUser;
+export let currentUser;
 if (localStorage.getItem("uid"))
   await setCurrentUser(localStorage.getItem("uid"));
 
@@ -71,9 +71,6 @@ export async function createUser(name, email, uid) {
 
 async function getUsers(field, operator, value) {
   const users = [];
-  // field = "email";
-  //  operator = "==";
-  // value = "b@b.com";
   const q = query(usersRef, where(field, operator, value));
   const querySnapshot = await getDocs(q);
   await querySnapshot.forEach((user) => {
@@ -138,50 +135,61 @@ async function startNewGroup(name) {
 }
 
 async function inviteToGroup(email) {
-  // const userInfo = await query(usersRef, where("email", "==", email));
   //ADD USER NOT FOUND CHECK
   await updateDoc(doc(db, "chats", currentChatId), {
     users: arrayUnion(email),
   });
 }
 
-export async function getChats(currentUserEmail) {
+async function prepareAndRenderChat(chat) {
+  if (chat.name === "") {
+    //chat.name != "" means its a group
+    const otherUserEmail = chat.users.filter(
+      (user) => user !== currentUser.email
+    );
+    const otherUser = await getUsers("email", "==", otherUserEmail[0]);
+    chat.name = otherUser[0].data().fullName;
+    chat.img = otherUser[0].data().img;
+  } else{
+    chat.img = "../src/images/groups_FILL0_wght400_GRAD0_opsz48.svg"
+  }
+  renderChat(chat);
+}
+
+export async function getChats(userEmail) {
+  chatsList.appendChild(loader);
   if (chatsSnapshot) chatsSnapshot(); //detaches last snapshot
   const q = query(
     chatsRef,
-    where("users", "array-contains", currentUserEmail),
+    where("users", "array-contains", userEmail),
     orderBy("lastMessage.time", "asc")
   );
+  chatsList.removeChild(loader);
   chatsSnapshot = onSnapshot(q, (snapshot) => {
     snapshot.docChanges().forEach(async (change) => {
       const chat = change.doc.data();
       chat.id = change.doc.id;
-      if (chat.name === "") {
-        //chat.name != "" means its a group
-        const otherUserEmail = chat.users.filter(
-          (user) => user !== currentUser.email
-        );
-        const otherUser = await getUsers("email", "==", otherUserEmail[0]);
-        chat.name = otherUser[0].data().fullName;
-        chat.img = otherUser[0].data().img;
-      }
       if (change.type === "added") {
         console.log("New Chat: ", change.doc.data());
-        renderChat(chat);
+        prepareAndRenderChat(chat);
       }
       if (change.type === "modified") {
-        console.log("Modified city: ", change.doc.data());
+        console.log("Modified chat: ", change.doc.data());
+        const element = document.querySelector(`#${chat.id}`);
+        chatsList.removeChild(element);
+        prepareAndRenderChat(chat);
       }
       if (change.type === "removed") {
-        console.log("Removed city: ", change.doc.data());
+        console.log("Removed chat: ", change.doc.data());
+        const element = document.querySelector(`#${chat.id}`);
+        chatsList.removeChild(element);
       }
     });
   });
 }
 
-async function setCurrentChat(chatId) {
+async function loadChatUsers(chatId) {
   usersHeader.innerHTML = "";
-  currentChatId = chatId;
   const chat = await getDoc(doc(db, "chats", chatId));
   const q = query(usersRef, where("email", "in", chat.data().users));
   const membersSnapshot = await getDocs(q);
@@ -211,10 +219,12 @@ async function sendMsg() {
 }
 
 function renderMessage(message) {
+  console.log("x");
   //outgoing messages
   if (message.userEmail === currentUser.email) {
     const msg = document.createElement("div");
     msg.className = "outgoing-chats";
+    msg.setAttribute("id", message.id);
     msg.innerHTML = `<div class="outgoing-chats-img">
           <img src=${message.userImgUrl} />
           </div>
@@ -231,6 +241,7 @@ function renderMessage(message) {
     //received messages
     const msg = document.createElement("div");
     msg.className = "received-chats";
+    msg.setAttribute("id", message.id);
     msg.innerHTML = `<div class="received-chats-img">
     <img src="${message.userImgUrl}" />
     </div>
@@ -253,6 +264,7 @@ function renderChat(chat) {
     : "";
   const chatBox = document.createElement("div");
   chatBox.className = "menu-chat-box";
+  chatBox.setAttribute("id", chat.id);
   chatBox.innerHTML = `  <div class="menu-chat-box-img">
   <img src="${chat.img}" >
 </div>
@@ -266,38 +278,44 @@ function renderChat(chat) {
   }</p>
 </div>`;
   chatBox.addEventListener("click", () => {
-    setCurrentChat(chat.id);
+    currentChatId = chat.id;
+    loadChatUsers(chat.id);
     msgPage.innerHTML = "";
     getMessages(chat.id);
     container.classList.remove("hidden");
   });
-  chatsBar.appendChild(chatBox);
+  chatsList.appendChild(chatBox);
 }
 
 export let messagesSnapshot;
 
 async function getMessages(chatId) {
   if (messagesSnapshot) messagesSnapshot();
-  msgPage.innerHTML = `<div class="loader"></div>`;
+  msgPage.appendChild(loader);
   try {
     const q = query(
       msgRef,
       where("chatId", "==", chatId),
       orderBy("time", "asc")
     );
+    msgPage.removeChild(loader);
     messagesSnapshot = onSnapshot(q, (snapshot) => {
-      msgPage.innerHTML = "";
       snapshot.docChanges().forEach(async (change) => {
         const message = change.doc.data();
+        message.id = change.doc.id;
         renderMessage(message);
         if (change.type === "added") {
           console.log("New Message: ", change.doc.data());
         }
         if (change.type === "modified") {
           console.log("Modified city: ", change.doc.data());
+          const element = document.querySelector(`#${message.id}`);
+          msgPage.removeChild(element);
+          renderMessage(message);
         }
         if (change.type === "removed") {
           console.log("Removed city: ", change.doc.data());
+          msgPage.removeChild(element);
         }
       });
     });
