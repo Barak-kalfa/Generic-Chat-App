@@ -137,3 +137,11 @@ a {
   cursor: pointer;
   transform: scale(1.2);
 }
+
+#no-chat-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  width: 100%;
+}

@@ -22,7 +22,7 @@ const msgPage = document.querySelector(".msg-page");
 const chatsList = document.querySelector("#chats-list");
 const newChatLink = document.querySelector("#new-chat-link");
 const newGroupLink = document.querySelector("#new-group-link");
-const inviteLink = document.querySelector("#invite-button");
+const inviteButton = document.querySelector("#invite-button");
 const newChatInput = document.querySelector("#new-chat-input");
 const newChatButton = document.querySelector("#new-chat-button");
 const usersHeader = document.querySelector(".container1");
@@ -39,7 +39,9 @@ let currentChatId;
 export let currentUser;
 if (localStorage.getItem("uid"))
   await setCurrentUser(localStorage.getItem("uid"));
-
+if (!currentChatId) {
+  container
+}
 console.log(currentUser);
 
 export async function setCurrentUser() {
@@ -110,6 +112,9 @@ async function startNewChat(email) {
       },
     };
     const docRef = await addDoc(collection(db, "chats"), chat);
+    await updateDoc(doc(db, "users", currentUser.uid), {
+      chats: arrayUnion(docRef.uid),
+    });
   } catch (err) {
     console.log(err);
   }
@@ -129,6 +134,7 @@ async function startNewGroup(name) {
       },
     };
     const docRef = await addDoc(collection(db, "chats"), chat);
+    
   } catch (err) {
     console.log(err);
   }
@@ -193,6 +199,11 @@ export async function getChats(userEmail) {
 async function loadChatUsers(chatId) {
   usersHeader.innerHTML = "";
   const chat = await getDoc(doc(db, "chats", chatId));
+  if(chat.data().name !== "") {
+    inviteButton.classList.remove("hidden");
+  } else {
+    inviteButton.classList.add("hidden");
+  }
   const q = query(usersRef, where("email", "in", chat.data().users));
   const membersSnapshot = await getDocs(q);
   membersSnapshot.forEach((doc) => {
@@ -216,12 +227,44 @@ async function sendMsg() {
   };
   messageInput.value = "";
   await setDoc(doc(collection(db, "messages")), message);
-  const chatRef = await doc(db, "chats", currentChatId);
-  await updateDoc(chatRef, { lastMessage: message });
+  // const chatRef = await doc(db, "chats", currentChatId);
+  // await updateDoc(chatRef, { lastMessage: message });
+}
+
+async function generateRandomReplay(chatUsers){
+  const notUserList = chatUsers.filter(user => user !== currentUser.email);
+  const randomUserEmail = notUserList[Math.floor(Math.random() * notUserList.length)];
+  const usersList = await getUsers("email", "==", randomUserEmail);
+  const user = usersList[0].data();
+  console.log();
+  const messageTextData = await fetch("https://official-joke-api.appspot.com/random_joke");
+const messageText = await messageTextData.json();
+  const date = new Date();
+  const time = Timestamp.fromDate(date);
+  const setup = {
+    chatId: currentChatId,
+    time: time,
+    text: messageText.setup,
+    userEmail: user.email,
+    userName: user.fullName,
+    userImgUrl: user.img,
+  };
+  const punch = {
+    chatId: currentChatId,
+    time: time,
+    text: messageText.punchline,
+    userEmail: randomUserEmail,
+    userName: user.fullName,
+    userImgUrl: user.img,
+  };
+    await setDoc(doc(collection(db, "messages")), setup);
+  setTimeout(async () => {
+    await setDoc(doc(collection(db, "messages")), punch);
+  }, 5000);
+  clearTimeout();
 }
 
 function renderMessage(message) {
-  console.log("x");
   //outgoing messages
   if (message.userEmail === currentUser.email) {
     const msg = document.createElement("div");
@@ -283,7 +326,7 @@ function renderChat(chat) {
     currentChatId = chat.id;
     loadChatUsers(chat.id);
     msgPage.innerHTML = "";
-    getMessages(chat.id);
+    getMessages(chat);
     container.classList.remove("hidden");
   });
   chatsList.appendChild(chatBox);
@@ -291,13 +334,13 @@ function renderChat(chat) {
 
 export let messagesSnapshot;
 
-async function getMessages(chatId) {
+async function getMessages(chat) {
   if (messagesSnapshot) messagesSnapshot();
   msgPage.appendChild(loader);
   try {
     const q = query(
       msgRef,
-      where("chatId", "==", chatId),
+      where("chatId", "==", chat.id),
       orderBy("time", "asc")
     );
     msgPage.removeChild(loader);
@@ -308,6 +351,10 @@ async function getMessages(chatId) {
         renderMessage(message);
         if (change.type === "added") {
           console.log("New Message: ", change.doc.data());
+          console.log(change.doc.data().userEmail === currentUser.email);
+          if(change.doc.data().userEmail === currentUser.email){
+            generateRandomReplay(chat.users.filter(user => user !== currentUser.email));
+          }
         }
         if (change.type === "modified") {
           console.log("Modified city: ", change.doc.data());
@@ -327,7 +374,6 @@ async function getMessages(chatId) {
 }
 
 sideBar.addEventListener("mouseout", ()=>{
-  console.log("x");
   sideBar.classList.remove("open-sidebar");
 })
 
@@ -348,7 +394,7 @@ newGroupLink.addEventListener("click", () => {
   newChatInput.focus();
 });
 
-inviteLink.addEventListener("click", () => {
+inviteButton.addEventListener("click", () => {
   newChatInput.setAttribute("type", "email");
   newChatInput.setAttribute("name", "inviteToGroup");
   newChatInput.setAttribute("placeholder", "Invite with Email");
