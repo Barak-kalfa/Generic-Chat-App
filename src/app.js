@@ -15,13 +15,14 @@ import {
   arrayUnion,
 } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
+const sideBar = document.querySelector(".sidebar");
 const sendMsgButton = document.querySelector(".send-icon");
 const messageInput = document.querySelector("#msg-input");
 const msgPage = document.querySelector(".msg-page");
 const chatsList = document.querySelector("#chats-list");
 const newChatLink = document.querySelector("#new-chat-link");
 const newGroupLink = document.querySelector("#new-group-link");
-const inviteLink = document.querySelector("#invite-link");
+const inviteLink = document.querySelector("#invite-button");
 const newChatInput = document.querySelector("#new-chat-input");
 const newChatButton = document.querySelector("#new-chat-button");
 const usersHeader = document.querySelector(".container1");
@@ -61,7 +62,7 @@ export async function createUser(name, email, uid) {
       fullName: name,
       email: email,
       chats: [],
-      img: "",
+      img: `https://mdbcdn.b-cdn.net/img/new/avatars/${Math.round(Math.random() * 10)}.webp`,
     });
   } catch (err) {
     console.log(err);
@@ -175,12 +176,14 @@ export async function getChats(userEmail) {
       if (change.type === "modified") {
         console.log("Modified chat: ", change.doc.data());
         const element = document.querySelector(`#${chat.id}`);
+        loadChatUsers(chat.id);
         chatsList.removeChild(element);
         prepareAndRenderChat(chat);
       }
       if (change.type === "removed") {
         console.log("Removed chat: ", change.doc.data());
         const element = document.querySelector(`#${chat.id}`);
+        loadChatUsers(chat.id);
         chatsList.removeChild(element);
       }
     });
@@ -211,10 +214,10 @@ async function sendMsg() {
     userName: currentUser.fullName,
     userImgUrl: currentUser.img,
   };
+  messageInput.value = "";
   await setDoc(doc(collection(db, "messages")), message);
   const chatRef = await doc(db, "chats", currentChatId);
   await updateDoc(chatRef, { lastMessage: message });
-  messageInput.value = "";
 }
 
 function renderMessage(message) {
@@ -323,6 +326,11 @@ async function getMessages(chatId) {
   }
 }
 
+sideBar.addEventListener("mouseout", ()=>{
+  console.log("x");
+  sideBar.classList.remove("open-sidebar");
+})
+
 sendMsgButton.addEventListener("click", sendMsg);
 messageInput.addEventListener("keyup", (e) => e.key === "Enter" && sendMsg());
 
@@ -345,6 +353,7 @@ inviteLink.addEventListener("click", () => {
   newChatInput.setAttribute("name", "inviteToGroup");
   newChatInput.setAttribute("placeholder", "Invite with Email");
   newChatInput.focus();
+  sideBar.classList.add("open-sidebar");
 });
 
 newChatButton.addEventListener("click", () => {

@@ -12,6 +12,12 @@
   transition: 0.5s; /* 0.5 second transition effect to slide in the sidebar */
 }
 
+.open-sidebar {
+  width: 350px;
+  border-right: 3px solid grey;
+}
+
+
 /* The sidebar links */
 .sidebar a {
   padding: 8px 8px 8px 32px;

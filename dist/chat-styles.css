@@ -57,6 +57,13 @@ img {
   margin: 0 0 0 5px;
   height: 10%;
 }
+
+.msg-header img {
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+
 /* Styling the inbox */
 .chat-page {
   padding: 0 0 50px 0;
