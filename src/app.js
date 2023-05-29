@@ -48,7 +48,6 @@ export async function setCurrentUser() {
     const user = userInfo.data();
     getChats(user.email);
     user.uid = uid;
-    user.img = user.img;
     currentUser = user;
   } catch (e) {
     console.log(e.message);
@@ -344,7 +343,7 @@ newGroupLink.addEventListener("click", () => {
 inviteLink.addEventListener("click", () => {
   newChatInput.setAttribute("type", "email");
   newChatInput.setAttribute("name", "inviteToGroup");
-  newChatInput.setAttribute("placeholder", "Invite Someone");
+  newChatInput.setAttribute("placeholder", "Invite with Email");
   newChatInput.focus();
 });
 

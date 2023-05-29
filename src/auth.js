@@ -1,12 +1,11 @@
 import {
-  onAuthStateChanged,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
   signInWithPopup,
 } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 import { auth, googleProvider } from "./firebase-config.js";
-import { createUser, chatsSnapshot, messagesSnapshot, setCurrentUser, getChats, currentUser } from "./app.js";
+import { createUser, chatsSnapshot, messagesSnapshot, setCurrentUser, getChats } from "./app.js";
 
 const backdrop = document.getElementById("backdrop");
 const modal = document.getElementById("modal");
@@ -54,8 +53,11 @@ async function handleModalClick() {
 async function signInWithGoogle() {
   try {
     const userCredentials = await signInWithPopup(auth, googleProvider);
-    user = userCredentials.user;
+    const user = userCredentials.user;
+    console.log(user);
+    createUser(nameInput.value, user.email, user.uid);
     localStorage.setItem("uid", user.uid);
+    setCurrentUser(user.uid)
     toggleModal();
   } catch (err) {
     console.log(err.code, err.message);
