@@ -75,7 +75,6 @@ async function logOut() {
     messagesSnapshot && messagesSnapshot();
     localStorage.removeItem("uid");
     location.reload()
-    toggleModal();
   } catch (err) {
     console.log(err.code, err.message);
   }

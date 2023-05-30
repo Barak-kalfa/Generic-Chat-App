@@ -82,7 +82,7 @@ async function getUsers(field, operator, value) {
 }
 
 function handleMenuButton(input, callback) {
-  newChatInput.value = ""
+  newChatInput.value = "";
   switch (callback) {
     case "startNewChat":
       startNewChat(input);
@@ -134,17 +134,17 @@ async function startNewGroup(name) {
         userName: null,
       },
     };
-    const docRef = await addDoc(collection(db, "chats"), chat);
+    await addDoc(collection(db, "chats"), chat);
   } catch (err) {
     console.log(err);
   }
 }
 
 async function inviteToGroup(email) {
-  //ADD USER NOT FOUND CHECK
   await updateDoc(doc(db, "chats", currentChatId), {
     users: arrayUnion(email),
   });
+  loadChatUsers(currentChatId);
 }
 
 async function prepareAndRenderChat(chat) {
@@ -204,6 +204,7 @@ async function loadChatUsers(chatId) {
   const q = query(usersRef, where("email", "in", chat.data().users));
   const membersSnapshot = await getDocs(q);
   membersSnapshot.forEach((doc) => {
+    // currentChatUsers.push(doc.data());
     const groupMember = document.createElement("img");
     groupMember.src = doc.data().img;
     groupMember.classNames = "msgimg";
@@ -230,19 +231,20 @@ async function sendMsg() {
 }
 
 async function generateRandomReplay() {
-  const otherUsersEmails = currentChatUsers.filter(
-    (user) => user !== currentUser.email
+  console.log("generateRandomReplay:", currentChatUsers);
+  const otherUsers = currentChatUsers.filter(
+    (user) => user.email !== currentUser.email
   );
-  const randomIndex = Math.floor(Math.random() * otherUsersEmails.length);
-  const randomUserEmail = otherUsersEmails[randomIndex > 0 ? randomIndex : 0];
-  const usersInfoList = await getUsers("email", "==", randomUserEmail);
+  const randomIndex = Math.floor(Math.random() * otherUsers.length);
+  const randomUser = otherUsers[randomIndex > 0 ? randomIndex : 0];
+  const usersInfoList = await getUsers("email", "==", randomUser.email);
   const otherUser = usersInfoList[0].data();
   const messageTextData = await fetch(
     "https://official-joke-api.appspot.com/random_joke"
   );
   const messageText = await messageTextData.json();
-  let date = new Date();
-  let time = Timestamp.fromDate(date);
+  const date = new Date();
+  const time = Timestamp.fromDate(date);
   const message = {
     chatId: currentChatId,
     time: "",
@@ -257,8 +259,8 @@ async function generateRandomReplay() {
   await setDoc(doc(collection(db, "messages")), message);
   await updateDoc(chatRef, { lastMessage: message });
   setTimeout(async () => {
-    date = new Date();
-    time = Timestamp.fromDate(date);
+    const date = new Date();
+    const time = Timestamp.fromDate(date);
     message.time = time;
     message.text = messageText.punchline;
     await setDoc(doc(collection(db, "messages")), message);
