@@ -204,16 +204,30 @@ async function loadChatUsers(chatId) {
     inviteButton.classList.add("hidden");
   }
   const q = query(usersRef, where("email", "in", chat.data().usersEmails));
-  const membersSnapshot = await getDocs(q);
-  membersSnapshot.forEach((doc) => {
-    doc.docChanges().forEach((change) => {
-      if (change.type === ")
+  // const membersSnapshot = await getDocs(q);
+  const membersSnapshot = onSnapshot(q, (snapshot) => {
+    snapshot.docChanges().forEach((change) => {
+ 
+      if (change.type === "added") {
+        const groupMember = document.createElement("img");
+        groupMember.src = change.doc.data().img;
+        groupMember.classNames = "msgimg";
+        usersHeader.appendChild(groupMember);
+      }
+      if (change.type === "modified") {
+       
+      }
+      if (change.type === "removed") {
+      }
     });
-    const groupMember = document.createElement("img");
-    groupMember.src = doc.data().img;
-    groupMember.classNames = "msgimg";
-    usersHeader.appendChild(groupMember);
   });
+  
+  // membersSnapshot.forEach((doc) => {
+  //   const groupMember = document.createElement("img");
+  //   groupMember.src = doc.data().img;
+  //   groupMember.classNames = "msgimg";
+  //   usersHeader.appendChild(groupMember);
+  // });
 }
 
 async function sendMsg() {
@@ -235,7 +249,6 @@ async function sendMsg() {
 }
 
 async function generateRandomReplay() {
-  console.log("generateRandomReplay:", currentChatUsers);
   const otherUsers = currentChatUsers.filter(
     (user) => user.email !== currentUser.email
   );
