@@ -2,7 +2,7 @@ const path =  require('path');
 
 module.exports = {
   mode: 'development',
-  entry: './src/auth.js',
+  entry: './src/entry.js',
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'auth.js'

@@ -14,7 +14,6 @@ import {
   where,
   arrayUnion,
 } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
-
 const sideBar = document.querySelector(".sidebar");
 const sendMsgButton = document.querySelector(".send-icon");
 const messageInput = document.querySelector("#msg-input");
@@ -231,40 +230,37 @@ async function sendMsg() {
 }
 
 async function generateRandomReplay(){
-  const notUserList = currentChatUsers.filter(user => user !== currentUser.email);
-  const randomIndex = Math.floor(Math.random() * notUserList.length);
-  const randomUserEmail = notUserList[randomIndex < notUserList.length ? randomIndex : 0];
-  const usersList = await getUsers("email", "==", randomUserEmail);
-  const user = usersList[0].data();
+  const otherUsersEmails = currentChatUsers.filter(user => user !== currentUser.email);
+  const randomIndex = Math.floor(Math.random() * otherUsersEmails.length);
+  const randomUserEmail = otherUsersEmails[randomIndex];
+  const usersInfoList = await getUsers("email", "==", randomUserEmail);
+  const otherUser = usersInfoList[0].data();
   const messageTextData = await fetch("https://official-joke-api.appspot.com/random_joke");
   const messageText = await messageTextData.json();
-  const date = new Date();
-  const time = Timestamp.fromDate(date);
-  const setup = {
+  let date = new Date();
+  let time = Timestamp.fromDate(date);
+  const message = {
     chatId: currentChatId,
-    time: time,
-    text: messageText.setup,
-    userEmail: user.email,
-    userName: user.fullName,
-    userImgUrl: user.img,
+    time: "",
+    text: "",
+    userEmail: otherUser.email,
+    userName: otherUser.fullName,
+    userImgUrl: otherUser.img,
   };
-  const punch = {
-    chatId: currentChatId,
-    time: time,
-    text: messageText.punchline,
-    userEmail: randomUserEmail,
-    userName: user.fullName,
-    userImgUrl: user.img,
-  };
+  message.time = time;
+  message.text = messageText.setup;
   const chatRef = await doc(db, "chats", currentChatId);
-  await setDoc(doc(collection(db, "messages")), setup);
-  await updateDoc(chatRef, { lastMessage: setup });
+  await setDoc(doc(collection(db, "messages")), message);
+  await updateDoc(chatRef, { lastMessage: message });
   setTimeout(async () => {
-    await setDoc(doc(collection(db, "messages")), punch);
-    await updateDoc(chatRef, { lastMessage: punch });
+     date = new Date();
+     time = Timestamp.fromDate(date);
+     message.time = time;
+     message.text = messageText.punchline;
+    await setDoc(doc(collection(db, "messages")), message);
+    await updateDoc(chatRef, { lastMessage: message });
   }, 5000);
   clearTimeout();
-  
 }
 
 function renderMessage(message) {
@@ -354,16 +350,14 @@ async function getMessages(chat) {
         message.id = change.doc.id;
         renderMessage(message);
         if (change.type === "added") {
-          console.log("New Message: ", change.doc.data());
+          //
         }
         if (change.type === "modified") {
-          console.log("Modified city: ", change.doc.data());
           const element = document.querySelector(`#${message.id}`);
           msgPage.removeChild(element);
           renderMessage(message);
         }
         if (change.type === "removed") {
-          console.log("Removed city: ", change.doc.data());
           msgPage.removeChild(element);
         }
       });
