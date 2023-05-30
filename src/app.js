@@ -76,7 +76,7 @@ async function getUsers(field, operator, value) {
   const q = query(usersRef, where(field, operator, value));
   const querySnapshot = await getDocs(q);
   await querySnapshot.forEach((user) => {
-    users.push(user);
+    users.push(user.data());
   });
   return users;
 }
@@ -101,9 +101,11 @@ function handleMenuButton(input, callback) {
 async function startNewChat(email) {
   //ADD EMAIL ALREADY IN CHATS LIST CHECK
   try {
+    const otherUser = await getUsers("email", "==", email);
     const chat = {
       name: "",
-      users: [currentUser.email, email],
+      usersEmails: [currentUser.email, otherUser[0].email],
+      users: [currentUser, otherUser[0]],
       lastMessage: {
         chatId: null,
         time: null,
@@ -112,10 +114,7 @@ async function startNewChat(email) {
         userName: null,
       },
     };
-    const docRef = await addDoc(collection(db, "chats"), chat);
-    // await updateDoc(doc(db, "users", currentUser.uid), {
-    //   chats: arrayUnion(docRef.uid),
-    // });
+    await addDoc(collection(db, "chats"), chat);
   } catch (err) {
     console.log(err);
   }
@@ -125,7 +124,8 @@ async function startNewGroup(name) {
   try {
     const chat = {
       name: name.trim(),
-      users: [currentUser.email],
+      usersEmails: [currentUser.email],
+      users: [currentUser],
       lastMessage: {
         chatId: null,
         time: null,
@@ -141,8 +141,10 @@ async function startNewGroup(name) {
 }
 
 async function inviteToGroup(email) {
+  const inviteEmail = await getUsers("email", "==", email);
   await updateDoc(doc(db, "chats", currentChatId), {
-    users: arrayUnion(email),
+    users: arrayUnion(inviteEmail[0]),
+    usersEmails: arrayUnion(inviteEmail[0].email)
   });
   loadChatUsers(currentChatId);
 }
@@ -150,12 +152,12 @@ async function inviteToGroup(email) {
 async function prepareAndRenderChat(chat) {
   if (chat.name === "") {
     //chat.name != "" means its a group
-    const otherUserEmail = chat.users.filter(
+    const otherUserEmail = chat.usersEmails.filter(
       (user) => user !== currentUser.email
     );
     const otherUser = await getUsers("email", "==", otherUserEmail[0]);
-    chat.name = otherUser[0].data().fullName;
-    chat.img = otherUser[0].data().img;
+    chat.name = otherUser[0].fullName;
+    chat.img = otherUser[0].img;
   } else {
     chat.img = "../src/images/groups_FILL0_wght400_GRAD0_opsz48.svg";
   }
@@ -167,7 +169,7 @@ export async function getChats(userEmail) {
   if (chatsSnapshot) chatsSnapshot(); //detaches last snapshot
   const q = query(
     chatsRef,
-    where("users", "array-contains", userEmail),
+    where("usersEmails", "array-contains", userEmail),
     orderBy("lastMessage.time", "asc")
   );
   chatsList.removeChild(loader);
@@ -179,13 +181,13 @@ export async function getChats(userEmail) {
         prepareAndRenderChat(chat);
       }
       if (change.type === "modified") {
-        const element = document.querySelector(`#${chat.id}`);
+        const element = document.querySelector(`#CUID${chat.id}`);
         loadChatUsers(chat.id);
         chatsList.removeChild(element);
         prepareAndRenderChat(chat);
       }
       if (change.type === "removed") {
-        const element = document.querySelector(`#${chat.id}`);
+        const element = document.querySelector(`#CUID${chat.id}`);
         loadChatUsers(chat.id);
         chatsList.removeChild(element);
       }
@@ -201,10 +203,12 @@ async function loadChatUsers(chatId) {
   } else {
     inviteButton.classList.add("hidden");
   }
-  const q = query(usersRef, where("email", "in", chat.data().users));
+  const q = query(usersRef, where("email", "in", chat.data().usersEmails));
   const membersSnapshot = await getDocs(q);
   membersSnapshot.forEach((doc) => {
-    // currentChatUsers.push(doc.data());
+    doc.docChanges().forEach((change) => {
+      if (change.type === ")
+    });
     const groupMember = document.createElement("img");
     groupMember.src = doc.data().img;
     groupMember.classNames = "msgimg";
@@ -238,7 +242,7 @@ async function generateRandomReplay() {
   const randomIndex = Math.floor(Math.random() * otherUsers.length);
   const randomUser = otherUsers[randomIndex > 0 ? randomIndex : 0];
   const usersInfoList = await getUsers("email", "==", randomUser.email);
-  const otherUser = usersInfoList[0].data();
+  const otherUser = usersInfoList[0];
   const messageTextData = await fetch(
     "https://official-joke-api.appspot.com/random_joke"
   );
@@ -314,7 +318,7 @@ function renderChat(chat) {
     : "";
   const chatBox = document.createElement("div");
   chatBox.className = "menu-chat-box";
-  chatBox.setAttribute("id", chat.id);
+  chatBox.setAttribute("id", `CUID${chat.id}`);
   chatBox.innerHTML = `  <div class="menu-chat-box-img">
   <img src="${chat.img}" >
 </div>
