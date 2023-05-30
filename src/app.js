@@ -33,15 +33,13 @@ loader.classList.add("loader");
 const usersRef = collection(db, "users");
 const chatsRef = collection(db, "chats");
 const msgRef = collection(db, "messages");
+let currentChatUsers = [];
 
 export let chatsSnapshot;
 let currentChatId;
 export let currentUser;
 if (localStorage.getItem("uid"))
   await setCurrentUser(localStorage.getItem("uid"));
-if (!currentChatId) {
-  container
-}
 console.log(currentUser);
 
 export async function setCurrentUser() {
@@ -112,9 +110,9 @@ async function startNewChat(email) {
       },
     };
     const docRef = await addDoc(collection(db, "chats"), chat);
-    await updateDoc(doc(db, "users", currentUser.uid), {
-      chats: arrayUnion(docRef.uid),
-    });
+    // await updateDoc(doc(db, "users", currentUser.uid), {
+    //   chats: arrayUnion(docRef.uid),
+    // });
   } catch (err) {
     console.log(err);
   }
@@ -226,19 +224,20 @@ async function sendMsg() {
     userImgUrl: currentUser.img,
   };
   messageInput.value = "";
+  const chatRef = await doc(db, "chats", currentChatId);
   await setDoc(doc(collection(db, "messages")), message);
-  // const chatRef = await doc(db, "chats", currentChatId);
-  // await updateDoc(chatRef, { lastMessage: message });
+  await updateDoc(chatRef, { lastMessage: message });
+  setTimeout(() => generateRandomReplay(), 2000);
 }
 
-async function generateRandomReplay(chatUsers){
-  const notUserList = chatUsers.filter(user => user !== currentUser.email);
-  const randomUserEmail = notUserList[Math.floor(Math.random() * notUserList.length)];
+async function generateRandomReplay(){
+  const notUserList = currentChatUsers.filter(user => user !== currentUser.email);
+  const randomIndex = Math.floor(Math.random() * notUserList.length);
+  const randomUserEmail = notUserList[randomIndex < notUserList.length ? randomIndex : 0];
   const usersList = await getUsers("email", "==", randomUserEmail);
   const user = usersList[0].data();
-  console.log();
   const messageTextData = await fetch("https://official-joke-api.appspot.com/random_joke");
-const messageText = await messageTextData.json();
+  const messageText = await messageTextData.json();
   const date = new Date();
   const time = Timestamp.fromDate(date);
   const setup = {
@@ -257,11 +256,15 @@ const messageText = await messageTextData.json();
     userName: user.fullName,
     userImgUrl: user.img,
   };
-    await setDoc(doc(collection(db, "messages")), setup);
+  const chatRef = await doc(db, "chats", currentChatId);
+  await setDoc(doc(collection(db, "messages")), setup);
+  await updateDoc(chatRef, { lastMessage: setup });
   setTimeout(async () => {
     await setDoc(doc(collection(db, "messages")), punch);
+    await updateDoc(chatRef, { lastMessage: punch });
   }, 5000);
   clearTimeout();
+  
 }
 
 function renderMessage(message) {
@@ -324,6 +327,7 @@ function renderChat(chat) {
 </div>`;
   chatBox.addEventListener("click", () => {
     currentChatId = chat.id;
+    currentChatUsers = chat.users
     loadChatUsers(chat.id);
     msgPage.innerHTML = "";
     getMessages(chat);
@@ -345,16 +349,12 @@ async function getMessages(chat) {
     );
     msgPage.removeChild(loader);
     messagesSnapshot = onSnapshot(q, (snapshot) => {
-      snapshot.docChanges().forEach(async (change) => {
+      snapshot.docChanges().forEach((change) => {
         const message = change.doc.data();
         message.id = change.doc.id;
         renderMessage(message);
         if (change.type === "added") {
           console.log("New Message: ", change.doc.data());
-          console.log(change.doc.data().userEmail === currentUser.email);
-          if(change.doc.data().userEmail === currentUser.email){
-            generateRandomReplay(chat.users.filter(user => user !== currentUser.email));
-          }
         }
         if (change.type === "modified") {
           console.log("Modified city: ", change.doc.data());

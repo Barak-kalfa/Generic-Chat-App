@@ -17,7 +17,11 @@ const formType = document.querySelector("h1");
 const changeFormLink = document.querySelector("a");
 const googleButton = document.querySelector("#google-button");
 const logOutButton = document.querySelector("#log-out-button");
-const msgPage = document.querySelector(".msg-page");
+
+const toggleModal = () => {
+  backdrop.classList.toggle("visible");
+  modal.classList.toggle("visible");
+};
 
 async function handleModalClick() {
   try {
@@ -27,7 +31,7 @@ async function handleModalClick() {
         auth,
         emailInput.value,
         passwordInput.value
-      );
+        );
       const user = userCredentials.user;
       createUser(nameInput.value, user.email, user.uid);
       localStorage.setItem("uid", user.uid);
@@ -81,10 +85,6 @@ logOutButton.addEventListener("click", logOut);
 googleButton.addEventListener("click", signInWithGoogle);
 modalButton.addEventListener("click", handleModalClick);
 
-const toggleModal = () => {
-  backdrop.classList.toggle("visible");
-  modal.classList.toggle("visible");
-};
 
 const handleChangeForm = () => {
   const nameInput = document.getElementById("name-input-box");
