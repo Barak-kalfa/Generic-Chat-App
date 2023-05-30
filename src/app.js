@@ -1,4 +1,3 @@
-import "./auth.js";
 import { db } from "./firebase-config.js";
 import {
   getDocs,
@@ -83,7 +82,7 @@ async function getUsers(field, operator, value) {
 }
 
 function handleMenuButton(input, callback) {
-  newChatInput.value = "";
+  newChatInput.value = ""
   switch (callback) {
     case "startNewChat":
       startNewChat(input);
@@ -235,7 +234,7 @@ async function generateRandomReplay() {
     (user) => user !== currentUser.email
   );
   const randomIndex = Math.floor(Math.random() * otherUsersEmails.length);
-  const randomUserEmail = otherUsersEmails[randomIndex];
+  const randomUserEmail = otherUsersEmails[randomIndex > 0 ? randomIndex : 0];
   const usersInfoList = await getUsers("email", "==", randomUserEmail);
   const otherUser = usersInfoList[0].data();
   const messageTextData = await fetch(
