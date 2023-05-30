@@ -33,7 +33,7 @@ loader.classList.add("loader");
 const usersRef = collection(db, "users");
 const chatsRef = collection(db, "chats");
 const msgRef = collection(db, "messages");
-let currentChatUsers = [];
+// let currentChatUsers = [];
 
 export let chatsSnapshot;
 let currentChat;
@@ -146,7 +146,7 @@ async function inviteToGroup(email) {
     users: arrayUnion(invitedUser[0]),
     usersEmails: arrayUnion(invitedUser[0].email)
   });
-  currentChatUsers.push(invitedUser[0]);
+  currentChat.users.push(invitedUser[0]);
   loadChatUsers(currentChat.id);
 }
 
@@ -227,7 +227,7 @@ async function sendMsg() {
   const date = new Date();
   const time = Timestamp.fromDate(date);
   const message = {
-    chatId: currentChatId,
+    chatId: currentChat.id,
     time: time,
     text: messageInput.value,
     userEmail: currentUser.email,
@@ -235,15 +235,14 @@ async function sendMsg() {
     userImgUrl: currentUser.img,
   };
   messageInput.value = "";
-  const chatRef = await doc(db, "chats", currentChatId);
+  const chatRef = await doc(db, "chats", currentChat.id);
   await setDoc(doc(collection(db, "messages")), message);
   await updateDoc(chatRef, { lastMessage: message });
   setTimeout(() => generateRandomReplay(), 2000);
 }
 
 async function generateRandomReplay() {
-  console.log("currentChatUsers:", currentChatUsers);
-  const otherUsers = currentChatUsers.filter(
+  const otherUsers = currentChat.users.filter(
     (user) => user.email !== currentUser.email
   );
   const randomIndex = Math.floor(Math.random() * otherUsers.length);
@@ -257,7 +256,7 @@ async function generateRandomReplay() {
   const date = new Date();
   const time = Timestamp.fromDate(date);
   const message = {
-    chatId: currentChatId,
+    chatId: currentChat.id,
     time: "",
     text: "",
     userEmail: otherUser.email,
@@ -266,7 +265,7 @@ async function generateRandomReplay() {
   };
   message.time = time;
   message.text = messageText.setup;
-  const chatRef = await doc(db, "chats", currentChatId);
+  const chatRef = await doc(db, "chats", currentChat.id);
   await setDoc(doc(collection(db, "messages")), message);
   await updateDoc(chatRef, { lastMessage: message });
   setTimeout(async () => {
@@ -340,7 +339,6 @@ function renderChat(chat) {
 </div>`;
   chatBox.addEventListener("click", () => {
     currentChat = chat;
-    currentChatUsers = chat.users;
     loadChatUsers(chat.id);
     msgPage.innerHTML = "";
     getMessages(chat);
