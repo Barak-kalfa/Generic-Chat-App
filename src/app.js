@@ -36,7 +36,7 @@ const msgRef = collection(db, "messages");
 let currentChatUsers = [];
 
 export let chatsSnapshot;
-let currentChatId;
+let currentChat;
 export let currentUser;
 if (localStorage.getItem("uid"))
   await setCurrentUser(localStorage.getItem("uid"));
@@ -141,12 +141,13 @@ async function startNewGroup(name) {
 }
 
 async function inviteToGroup(email) {
-  const inviteEmail = await getUsers("email", "==", email);
-  await updateDoc(doc(db, "chats", currentChatId), {
-    users: arrayUnion(inviteEmail[0]),
-    usersEmails: arrayUnion(inviteEmail[0].email)
+  const invitedUser = await getUsers("email", "==", email);
+  await updateDoc(doc(db, "chats", currentChat.id), {
+    users: arrayUnion(invitedUser[0]),
+    usersEmails: arrayUnion(invitedUser[0].email)
   });
-  loadChatUsers(currentChatId);
+  currentChatUsers.push(invitedUser[0]);
+  loadChatUsers(currentChat.id);
 }
 
 async function prepareAndRenderChat(chat) {
@@ -196,7 +197,6 @@ export async function getChats(userEmail) {
 }
 
 async function loadChatUsers(chatId) {
-  usersHeader.innerHTML = "";
   const chat = await getDoc(doc(db, "chats", chatId));
   if (chat.data().name !== "") {
     inviteButton.classList.remove("hidden");
@@ -206,19 +206,12 @@ async function loadChatUsers(chatId) {
   const q = query(usersRef, where("email", "in", chat.data().usersEmails));
   // const membersSnapshot = await getDocs(q);
   const membersSnapshot = onSnapshot(q, (snapshot) => {
+    usersHeader.innerHTML = "";
     snapshot.docChanges().forEach((change) => {
- 
-      if (change.type === "added") {
-        const groupMember = document.createElement("img");
-        groupMember.src = change.doc.data().img;
-        groupMember.classNames = "msgimg";
-        usersHeader.appendChild(groupMember);
-      }
-      if (change.type === "modified") {
-       
-      }
-      if (change.type === "removed") {
-      }
+      const groupMember = document.createElement("img");
+      groupMember.src = change.doc.data().img;
+      groupMember.classNames = "msgimg";
+      usersHeader.appendChild(groupMember);
     });
   });
   
@@ -249,6 +242,7 @@ async function sendMsg() {
 }
 
 async function generateRandomReplay() {
+  console.log("currentChatUsers:", currentChatUsers);
   const otherUsers = currentChatUsers.filter(
     (user) => user.email !== currentUser.email
   );
@@ -345,7 +339,7 @@ function renderChat(chat) {
   }</p>
 </div>`;
   chatBox.addEventListener("click", () => {
-    currentChatId = chat.id;
+    currentChat = chat;
     currentChatUsers = chat.users;
     loadChatUsers(chat.id);
     msgPage.innerHTML = "";
