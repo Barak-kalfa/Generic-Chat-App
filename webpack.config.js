@@ -5,7 +5,7 @@ module.exports = {
   entry: './src/entry.js',
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: 'auth.js'
+    filename: 'app.js'
   },
   watch: true,
   devtool: 'eval-source-map'

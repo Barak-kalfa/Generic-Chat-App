@@ -1,3 +1,5 @@
+import "./firebase-config.js";
+import "./app.js.js";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -5,7 +7,13 @@ import {
   signInWithPopup,
 } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 import { auth, googleProvider } from "./firebase-config.js";
-import { createUser, chatsSnapshot, messagesSnapshot, setCurrentUser, getChats } from "./app.js";
+import {
+  createUser,
+  chatsSnapshot,
+  messagesSnapshot,
+  setCurrentUser,
+  getChats,
+} from "./app.js";
 
 const backdrop = document.getElementById("backdrop");
 const modal = document.getElementById("modal");
@@ -31,11 +39,11 @@ async function handleModalClick() {
         auth,
         emailInput.value,
         passwordInput.value
-        );
+      );
       const user = userCredentials.user;
       createUser(nameInput.value, user.email, user.uid);
       localStorage.setItem("uid", user.uid);
-      setCurrentUser(user.uid)
+      setCurrentUser(user.uid);
       toggleModal();
     } else if (formType.innerText === "Login") {
       userCredentials = await signInWithEmailAndPassword(
@@ -45,8 +53,8 @@ async function handleModalClick() {
       );
       const user = userCredentials.user;
       localStorage.setItem("uid", user.uid);
-      setCurrentUser(user.uid)
-      getChats(user.email)
+      setCurrentUser(user.uid);
+      getChats(user.email);
       toggleModal();
     }
   } catch (err) {
@@ -61,7 +69,7 @@ async function signInWithGoogle() {
     console.log(user);
     createUser(nameInput.value, user.email, user.uid);
     localStorage.setItem("uid", user.uid);
-    setCurrentUser(user.uid)
+    setCurrentUser(user.uid);
     toggleModal();
   } catch (err) {
     console.log(err.code, err.message);
@@ -74,7 +82,7 @@ async function logOut() {
     chatsSnapshot && chatsSnapshot();
     messagesSnapshot && messagesSnapshot();
     localStorage.removeItem("uid");
-    location.reload()
+    location.reload();
     toggleModal();
   } catch (err) {
     console.log(err.code, err.message);
@@ -84,7 +92,6 @@ async function logOut() {
 logOutButton.addEventListener("click", logOut);
 googleButton.addEventListener("click", signInWithGoogle);
 modalButton.addEventListener("click", handleModalClick);
-
 
 const handleChangeForm = () => {
   const nameInput = document.getElementById("name-input-box");

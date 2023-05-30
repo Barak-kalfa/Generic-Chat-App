@@ -1,3 +1,4 @@
+import "./auth.js";
 import { db } from "./firebase-config.js";
 import {
   getDocs,
@@ -23,7 +24,8 @@ const newChatLink = document.querySelector("#new-chat-link");
 const newGroupLink = document.querySelector("#new-group-link");
 const inviteButton = document.querySelector("#invite-button");
 const newChatInput = document.querySelector("#new-chat-input");
-const newChatButton = document.querySelector("#new-chat-button");
+const newChatInputBox = document.querySelector("#new-chat-input-box");
+const menuInputButton = document.querySelector("#menu-input-button");
 const usersHeader = document.querySelector(".container1");
 const container = document.querySelector(".container");
 const loader = document.createElement("div");
@@ -61,7 +63,9 @@ export async function createUser(name, email, uid) {
       fullName: name,
       email: email,
       chats: [],
-      img: `https://mdbcdn.b-cdn.net/img/new/avatars/${Math.round(Math.random() * 10)}.webp`,
+      img: `https://mdbcdn.b-cdn.net/img/new/avatars/${Math.round(
+        Math.random() * 10
+      )}.webp`,
     });
   } catch (err) {
     console.log(err);
@@ -79,6 +83,7 @@ async function getUsers(field, operator, value) {
 }
 
 function handleMenuButton(input, callback) {
+  newChatInput.value = "";
   switch (callback) {
     case "startNewChat":
       startNewChat(input);
@@ -120,7 +125,7 @@ async function startNewChat(email) {
 async function startNewGroup(name) {
   try {
     const chat = {
-      name: name,
+      name: name.trim(),
       users: [currentUser.email],
       lastMessage: {
         chatId: null,
@@ -131,7 +136,6 @@ async function startNewGroup(name) {
       },
     };
     const docRef = await addDoc(collection(db, "chats"), chat);
-    
   } catch (err) {
     console.log(err);
   }
@@ -153,8 +157,8 @@ async function prepareAndRenderChat(chat) {
     const otherUser = await getUsers("email", "==", otherUserEmail[0]);
     chat.name = otherUser[0].data().fullName;
     chat.img = otherUser[0].data().img;
-  } else{
-    chat.img = "../src/images/groups_FILL0_wght400_GRAD0_opsz48.svg"
+  } else {
+    chat.img = "../src/images/groups_FILL0_wght400_GRAD0_opsz48.svg";
   }
   renderChat(chat);
 }
@@ -173,18 +177,15 @@ export async function getChats(userEmail) {
       const chat = change.doc.data();
       chat.id = change.doc.id;
       if (change.type === "added") {
-        console.log("New Chat: ", change.doc.data());
         prepareAndRenderChat(chat);
       }
       if (change.type === "modified") {
-        console.log("Modified chat: ", change.doc.data());
         const element = document.querySelector(`#${chat.id}`);
         loadChatUsers(chat.id);
         chatsList.removeChild(element);
         prepareAndRenderChat(chat);
       }
       if (change.type === "removed") {
-        console.log("Removed chat: ", change.doc.data());
         const element = document.querySelector(`#${chat.id}`);
         loadChatUsers(chat.id);
         chatsList.removeChild(element);
@@ -196,7 +197,7 @@ export async function getChats(userEmail) {
 async function loadChatUsers(chatId) {
   usersHeader.innerHTML = "";
   const chat = await getDoc(doc(db, "chats", chatId));
-  if(chat.data().name !== "") {
+  if (chat.data().name !== "") {
     inviteButton.classList.remove("hidden");
   } else {
     inviteButton.classList.add("hidden");
@@ -229,13 +230,17 @@ async function sendMsg() {
   setTimeout(() => generateRandomReplay(), 2000);
 }
 
-async function generateRandomReplay(){
-  const otherUsersEmails = currentChatUsers.filter(user => user !== currentUser.email);
+async function generateRandomReplay() {
+  const otherUsersEmails = currentChatUsers.filter(
+    (user) => user !== currentUser.email
+  );
   const randomIndex = Math.floor(Math.random() * otherUsersEmails.length);
   const randomUserEmail = otherUsersEmails[randomIndex];
   const usersInfoList = await getUsers("email", "==", randomUserEmail);
   const otherUser = usersInfoList[0].data();
-  const messageTextData = await fetch("https://official-joke-api.appspot.com/random_joke");
+  const messageTextData = await fetch(
+    "https://official-joke-api.appspot.com/random_joke"
+  );
   const messageText = await messageTextData.json();
   let date = new Date();
   let time = Timestamp.fromDate(date);
@@ -253,10 +258,10 @@ async function generateRandomReplay(){
   await setDoc(doc(collection(db, "messages")), message);
   await updateDoc(chatRef, { lastMessage: message });
   setTimeout(async () => {
-     date = new Date();
-     time = Timestamp.fromDate(date);
-     message.time = time;
-     message.text = messageText.punchline;
+    date = new Date();
+    time = Timestamp.fromDate(date);
+    message.time = time;
+    message.text = messageText.punchline;
     await setDoc(doc(collection(db, "messages")), message);
     await updateDoc(chatRef, { lastMessage: message });
   }, 5000);
@@ -323,7 +328,7 @@ function renderChat(chat) {
 </div>`;
   chatBox.addEventListener("click", () => {
     currentChatId = chat.id;
-    currentChatUsers = chat.users
+    currentChatUsers = chat.users;
     loadChatUsers(chat.id);
     msgPage.innerHTML = "";
     getMessages(chat);
@@ -367,9 +372,9 @@ async function getMessages(chat) {
   }
 }
 
-sideBar.addEventListener("mouseout", ()=>{
+sideBar.addEventListener("mouseout", () => {
   sideBar.classList.remove("open-sidebar");
-})
+});
 
 sendMsgButton.addEventListener("click", sendMsg);
 messageInput.addEventListener("keyup", (e) => e.key === "Enter" && sendMsg());
@@ -378,6 +383,7 @@ newChatLink.addEventListener("click", () => {
   newChatInput.setAttribute("type", "email");
   newChatInput.setAttribute("name", "startNewChat");
   newChatInput.setAttribute("placeholder", "Enter Someone's Email");
+  newChatInputBox.classList.toggle("hidden", false);
   newChatInput.focus();
 });
 
@@ -385,6 +391,7 @@ newGroupLink.addEventListener("click", () => {
   newChatInput.setAttribute("type", "text");
   newChatInput.setAttribute("name", "startNewGroup");
   newChatInput.setAttribute("placeholder", "Enter Group's Name");
+  newChatInputBox.classList.toggle("hidden", false);
   newChatInput.focus();
 });
 
@@ -392,10 +399,17 @@ inviteButton.addEventListener("click", () => {
   newChatInput.setAttribute("type", "email");
   newChatInput.setAttribute("name", "inviteToGroup");
   newChatInput.setAttribute("placeholder", "Invite with Email");
+  newChatInputBox.classList.toggle("hidden", false);
   newChatInput.focus();
   sideBar.classList.add("open-sidebar");
 });
 
-newChatButton.addEventListener("click", () => {
+menuInputButton.addEventListener("click", () => {
   handleMenuButton(newChatInput.value, newChatInput.name);
 });
+
+newChatInput.addEventListener(
+  "keyup",
+  (e) =>
+    e.key === "Enter" && handleMenuButton(newChatInput.value, newChatInput.name)
+);

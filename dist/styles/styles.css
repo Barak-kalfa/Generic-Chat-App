@@ -1,10 +1,9 @@
-
 body {
   display: flex;
   height: 100vh;
 }
 
-a:hover{
+a:hover {
   cursor: pointer;
 }
 
@@ -130,10 +129,10 @@ a {
   text-decoration: none !important;
 }
 .group-icon {
-  transition: all .2s ease-in-out;
+  transition: all 0.2s ease-in-out;
 }
 
-.group-icon:hover{
+.group-icon:hover {
   cursor: pointer;
   transform: scale(1.2);
 }

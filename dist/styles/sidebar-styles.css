@@ -17,7 +17,6 @@
   border-right: 3px solid grey;
 }
 
-
 /* The sidebar links */
 .sidebar a {
   padding: 8px 8px 8px 32px;
@@ -49,7 +48,6 @@
   z-index: 2;
 }
 
-
 #menu-box:hover {
   .sidebar {
     width: 350px;
@@ -73,7 +71,7 @@
   font-size: 1.3rem;
 }
 
-#new-chat-button {
+#menu-input-button {
   flex: 1;
 }
 
@@ -92,7 +90,7 @@
   background-color: #818181;
 }
 
-.menu-chat-box-img{
+.menu-chat-box-img {
   margin-right: 5px;
 }
 
@@ -102,7 +100,7 @@
   align-self: center;
 }
 
-.menu-chat-box-msg{
+.menu-chat-box-msg {
   width: 250px;
   white-space: nowrap;
   overflow: hidden;
@@ -110,6 +108,6 @@
   font-style: italic;
 }
 
-.menu-chat-box-time{
+.menu-chat-box-time {
   float: right;
 }
