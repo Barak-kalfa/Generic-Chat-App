@@ -143,10 +143,10 @@ async function inviteToGroup(email) {
   const invitedUser = await getUsers("email", "==", email);
   await updateDoc(doc(db, "chats", currentChat.id), {
     users: arrayUnion(invitedUser[0]),
-    usersEmails: arrayUnion(invitedUser[0].email)
+    usersEmails: arrayUnion(invitedUser[0].email),
   });
   currentChat.users.push(invitedUser[0]);
-  loadChatUsers(currentChat.id);
+  loadChatUsers(currentChat.users);
 }
 
 async function prepareAndRenderChat(chat) {
@@ -182,36 +182,33 @@ export async function getChats(userEmail) {
       }
       if (change.type === "modified") {
         const element = document.querySelector(`#CUID${chat.id}`);
-        loadChatUsers(chat.id);
+        loadChatUsers(chat.users);
         chatsList.removeChild(element);
         prepareAndRenderChat(chat);
       }
       if (change.type === "removed") {
         const element = document.querySelector(`#CUID${chat.id}`);
-        loadChatUsers(chat.id);
+        loadChatUsers(chat.users);
         chatsList.removeChild(element);
       }
     });
   });
 }
+let membersSnapshot;
+async function loadChatUsers(chatUsers) {
+  console.log(chatUsers);
 
-async function loadChatUsers(chatId) {
-  const chat = await getDoc(doc(db, "chats", chatId));
-  if (chat.data().name !== "") {
+  if (currentChat.name !== "") {
     inviteButton.classList.remove("hidden");
   } else {
     inviteButton.classList.add("hidden");
   }
-  const q = query(usersRef, where("email", "in", chat.data().usersEmails));
-  // const membersSnapshot = await getDocs(q);
-  const membersSnapshot = onSnapshot(q, (snapshot) => {
-    usersHeader.innerHTML = "";
-    snapshot.docChanges().forEach((change) => {
-      const groupMember = document.createElement("img");
-      groupMember.src = change.doc.data().img;
-      groupMember.classNames = "msgimg";
-      usersHeader.appendChild(groupMember);
-    });
+  usersHeader.innerHTML = "";
+  chatUsers.forEach((user) => {
+    const groupMember = document.createElement("img");
+    groupMember.src = user.img;
+    groupMember.classNames = "msgimg";
+    usersHeader.appendChild(groupMember);
   });
 }
 
@@ -331,7 +328,7 @@ function renderChat(chat) {
 </div>`;
   chatBox.addEventListener("click", () => {
     currentChat = chat;
-    loadChatUsers(chat.id);
+    loadChatUsers(chat.users);
     msgPage.innerHTML = "";
     getMessages(chat);
     container.classList.remove("hidden");
