@@ -154,7 +154,7 @@ async function inviteToGroup(email) {
 async function prepareAndRenderChat(chat) {
   console.log(chat.isGroup);
   if (chat.isGroup) {
-    chat.img = "../src/images/groups_FILL0_wght400_GRAD0_opsz48.svg";
+    chat.img = "./images/groups_FILL0_wght400_GRAD0_opsz48.svg";
   } else {
     //chat.name != "" means its a group
     const otherUser = chat.users.filter(

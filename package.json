@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "firebase-tools": "^12.2.1",
     "webpack": "^5.83.1",
     "webpack-cli": "^5.1.1"
   },
