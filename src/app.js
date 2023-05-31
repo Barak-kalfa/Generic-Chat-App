@@ -99,10 +99,12 @@ function handleMenuButton(input, callback) {
 }
 
 async function startNewChat(email) {
+  console.log(email);
   try {
     const otherUser = await getUsers("email", "==", email);
     const chat = {
       name: "",
+      isGroup: false,
       usersEmails: [currentUser.email, otherUser[0].email],
       users: [currentUser, otherUser[0]],
       lastMessage: {
@@ -123,6 +125,7 @@ async function startNewGroup(name) {
   try {
     const chat = {
       name: name.trim(),
+      isGroup: true,
       usersEmails: [currentUser.email],
       users: [currentUser],
       lastMessage: {
@@ -150,7 +153,10 @@ async function inviteToGroup(email) {
 }
 
 async function prepareAndRenderChat(chat) {
-  if (chat.name === "") {
+  console.log(chat.isGroup);
+  if (chat.isGroup) {
+    chat.img = "../src/images/groups_FILL0_wght400_GRAD0_opsz48.svg";
+  } else {
     //chat.name != "" means its a group
     const otherUser = chat.users.filter(
       (user) => user.email !== currentUser.email
@@ -158,8 +164,6 @@ async function prepareAndRenderChat(chat) {
     // const otherUser = await getUsers("email", "==", otherUserEmail[0]);
     chat.name = otherUser[0].fullName;
     chat.img = otherUser[0].img;
-  } else {
-    chat.img = "../src/images/groups_FILL0_wght400_GRAD0_opsz48.svg";
   }
   renderChat(chat);
 }
@@ -195,9 +199,7 @@ export async function getChats(userEmail) {
   });
 }
 async function loadChatUsers(chatUsers) {
-  console.log(chatUsers);
-
-  if (currentChat.name !== "") {
+  if (currentChat.isGroup) {
     inviteButton.classList.remove("hidden");
   } else {
     inviteButton.classList.add("hidden");
