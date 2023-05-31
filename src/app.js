@@ -372,36 +372,34 @@ async function getMessages(chat) {
   }
 }
 
+function setMenuInput(type, name, placeholder){
+  newChatInput.setAttribute("type", type);
+  newChatInput.setAttribute("name", name);
+  newChatInput.setAttribute("placeholder", placeholder);
+  newChatInputBox.classList.toggle("hidden", false);
+  newChatInput.focus();
+}
+
 sideBar.addEventListener("mouseout", () => {
   sideBar.classList.remove("open-sidebar");
 });
 
 sendMsgButton.addEventListener("click", sendMsg);
+
 messageInput.addEventListener("keyup", (e) => e.key === "Enter" && sendMsg());
 
 newChatLink.addEventListener("click", () => {
-  newChatInput.setAttribute("type", "email");
-  newChatInput.setAttribute("name", "startNewChat");
-  newChatInput.setAttribute("placeholder", "Enter Someone's Email");
-  newChatInputBox.classList.toggle("hidden", false);
-  newChatInput.focus();
+  setMenuInput("email", "startNewChat", "Enter Someone's Email")
 });
 
 newGroupLink.addEventListener("click", () => {
-  newChatInput.setAttribute("type", "text");
-  newChatInput.setAttribute("name", "startNewGroup");
-  newChatInput.setAttribute("placeholder", "Enter Group's Name");
-  newChatInputBox.classList.toggle("hidden", false);
-  newChatInput.focus();
+  setMenuInput("text", "startNewGroup", "Enter Group's Name")
 });
 
 inviteButton.addEventListener("click", () => {
-  newChatInput.setAttribute("type", "email");
-  newChatInput.setAttribute("name", "inviteToGroup");
-  newChatInput.setAttribute("placeholder", "Invite with Email");
-  newChatInputBox.classList.toggle("hidden", false);
-  newChatInput.focus();
+  setMenuInput("email", "inviteToGroup", "Invite with Email")
   sideBar.classList.add("open-sidebar");
+
 });
 
 menuInputButton.addEventListener("click", () => {
