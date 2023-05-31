@@ -194,7 +194,6 @@ export async function getChats(userEmail) {
     });
   });
 }
-let membersSnapshot;
 async function loadChatUsers(chatUsers) {
   console.log(chatUsers);
 
