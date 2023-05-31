@@ -99,7 +99,6 @@ function handleMenuButton(input, callback) {
 }
 
 async function startNewChat(email) {
-  //ADD EMAIL ALREADY IN CHATS LIST CHECK
   try {
     const otherUser = await getUsers("email", "==", email);
     const chat = {
@@ -153,10 +152,10 @@ async function inviteToGroup(email) {
 async function prepareAndRenderChat(chat) {
   if (chat.name === "") {
     //chat.name != "" means its a group
-    const otherUserEmail = chat.usersEmails.filter(
-      (user) => user !== currentUser.email
+    const otherUser = chat.users.filter(
+      (user) => user.email !== currentUser.email
     );
-    const otherUser = await getUsers("email", "==", otherUserEmail[0]);
+    // const otherUser = await getUsers("email", "==", otherUserEmail[0]);
     chat.name = otherUser[0].fullName;
     chat.img = otherUser[0].img;
   } else {
@@ -214,13 +213,6 @@ async function loadChatUsers(chatId) {
       usersHeader.appendChild(groupMember);
     });
   });
-  
-  // membersSnapshot.forEach((doc) => {
-  //   const groupMember = document.createElement("img");
-  //   groupMember.src = doc.data().img;
-  //   groupMember.classNames = "msgimg";
-  //   usersHeader.appendChild(groupMember);
-  // });
 }
 
 async function sendMsg() {
