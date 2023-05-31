@@ -99,7 +99,6 @@ function handleMenuButton(input, callback) {
 }
 
 async function startNewChat(email) {
-  console.log(email);
   try {
     const otherUser = await getUsers("email", "==", email);
     const chat = {
